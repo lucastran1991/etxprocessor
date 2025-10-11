@@ -1,0 +1,219 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Set up project structure",
+        "description": "Create the project structure as outlined in the PRD.",
+        "details": "Follow the provided architecture to set up the backend and frontend directories, including necessary subdirectories.",
+        "testStrategy": "Manual verification",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Install dependencies",
+        "description": "Install required dependencies for both the backend and frontend as specified in the PRD.",
+        "details": "Make sure to use the exact versions mentioned in the PRD.",
+        "testStrategy": "Automated tests (e.g., npm install or pip install)",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Configure environment variables",
+        "description": "Set up environment variables for both the backend and frontend as per the PRD.",
+        "details": "Create .env files and ensure they contain the required variables.",
+        "testStrategy": "Manual verification",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Implement database models",
+        "description": "Create the required database models for both backend and frontend.",
+        "details": "Make sure to follow best practices for database normalization.",
+        "testStrategy": "Automated tests (e.g., unit tests or migration tests)",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Develop API endpoints",
+        "description": "Implement the API endpoints as specified in the PRD.",
+        "details": "Ensure to follow best practices for RESTful APIs.",
+        "testStrategy": "Automated tests (e.g., integration tests or unit tests)",
+        "priority": "high",
+        "dependencies": [
+          5
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Develop frontend components",
+        "description": "Create the required frontend components as per the PRD.",
+        "details": "Ensure to follow best practices for accessible and performant frontend development.",
+        "testStrategy": "Automated tests (e.g., unit tests or E2E tests)",
+        "priority": "high",
+        "dependencies": [
+          6
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create header component",
+            "description": "Design and implement the header component according to PRD.",
+            "dependencies": [],
+            "details": "Follow accessible and performant frontend development best practices.",
+            "status": "done",
+            "testStrategy": "Automated tests (e.g., unit tests or E2E tests)"
+          },
+          {
+            "id": 2,
+            "title": "Create navigation component",
+            "description": "Design and implement the navigation component as per PRD.",
+            "dependencies": [
+              1
+            ],
+            "details": "Ensure proper integration with header component.",
+            "status": "done",
+            "testStrategy": "Automated tests (e.g., unit tests or E2E tests)"
+          },
+          {
+            "id": 3,
+            "title": "Create content area component",
+            "description": "Design and implement the content area component as per PRD.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Integrate header and navigation components with content area.",
+            "status": "done",
+            "testStrategy": "Automated tests (e.g., unit tests or E2E tests)"
+          },
+          {
+            "id": 4,
+            "title": "Create footer component",
+            "description": "Design and implement the footer component as per PRD.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Ensure proper integration with content area component.",
+            "status": "done",
+            "testStrategy": "Automated tests (e.g., unit tests or E2E tests)"
+          },
+          {
+            "id": 5,
+            "title": "Connect API to frontend components",
+            "description": "Integrate API endpoints with frontend components as specified.",
+            "dependencies": [
+              7
+            ],
+            "details": "Ensure that data is correctly fetched and displayed.",
+            "status": "done",
+            "testStrategy": "Automated tests (e.g., integration tests or E2E tests)"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Integrate API with frontend",
+        "description": "Connect the API endpoints to the frontend components.",
+        "details": "Ensure that data is correctly fetched and displayed.",
+        "testStrategy": "Automated tests (e.g., integration tests or E2E tests)",
+        "priority": "high",
+        "dependencies": [
+          7
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Deploy to AWS EC2",
+        "description": "Deploy the application to an AWS EC2 instance.",
+        "details": "Ensure that all necessary configurations have been made.",
+        "testStrategy": "Manual verification",
+        "priority": "high",
+        "dependencies": [],
+        "status": "not started",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create AWS EC2 instance",
+            "description": "Set up a basic EC2 instance (t3.medium) with Ubuntu 22.04 LTS for demo deployment",
+            "details": "Launch a new EC2 instance with appropriate security groups and key pair for demo purposes",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 2,
+            "title": "Install development environment",
+            "description": "Install Node.js 18.x, Python 3.9+, and PostgreSQL on the EC2 instance",
+            "details": "Install required runtime environments and database for running the application directly",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "parentTaskId": 10
+          },
+          {
+            "id": 3,
+            "title": "Clone and setup source code",
+            "description": "Clone the repository and install dependencies for both backend and frontend",
+            "details": "Clone the source code from repository and run npm install and pip install commands",
+            "status": "pending",
+            "dependencies": [
+              2
+            ],
+            "parentTaskId": 10
+          },
+          {
+            "id": 4,
+            "title": "Configure and start services",
+            "description": "Set up environment variables, start database, and run both backend and frontend services",
+            "details": "Configure .env files, start PostgreSQL, run FastAPI backend, and start Next.js frontend",
+            "status": "pending",
+            "dependencies": [
+              3
+            ],
+            "parentTaskId": 10
+          },
+          {
+            "id": 5,
+            "title": "Test demo deployment",
+            "description": "Verify that the application is running correctly and accessible via web browser",
+            "details": "Test all endpoints and UI functionality to ensure the demo is working properly",
+            "status": "pending",
+            "dependencies": [
+              4
+            ],
+            "parentTaskId": 10
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-10-09T09:29:37.597Z",
+      "updated": "2025-10-09T16:54:01.330Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

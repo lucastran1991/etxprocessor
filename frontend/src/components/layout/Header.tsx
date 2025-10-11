@@ -1,0 +1,173 @@
+'use client'
+
+import {
+  Box,
+  Flex,
+  Heading,
+  Spacer,
+  Button,
+  Avatar,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuDivider,
+  Text,
+  useColorModeValue,
+  IconButton,
+  useDisclosure,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  VStack,
+  HStack,
+  Link as ChakraLink
+} from '@chakra-ui/react'
+import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons'
+import { useAuth } from '@/hooks/useAuth'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+
+export default function Header() {
+  const { user, logout } = useAuth()
+  const router = useRouter()
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const bg = useColorModeValue('white', 'gray.800')
+  const borderColor = useColorModeValue('gray.200', 'gray.700')
+
+  const handleLogout = () => {
+    logout()
+    router.push('/')
+  }
+
+  const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
+    <Link href={href} passHref>
+      <ChakraLink
+        px={2}
+        py={1}
+        rounded="md"
+        _hover={{
+          textDecoration: 'none',
+          bg: useColorModeValue('gray.200', 'gray.700'),
+        }}
+      >
+        {children}
+      </ChakraLink>
+    </Link>
+  )
+
+  const MobileNav = () => (
+    <Drawer isOpen={isOpen} onClose={onClose} placement="right">
+      <DrawerOverlay />
+      <DrawerContent>
+        <DrawerCloseButton />
+        <DrawerHeader>Menu</DrawerHeader>
+        <DrawerBody>
+          <VStack spacing={4} align="stretch">
+            <NavLink href="/">Home</NavLink>
+            {user ? (
+              <>
+                <NavLink href="/dashboard">Dashboard</NavLink>
+                <NavLink href="/profile">Profile</NavLink>
+                <Button onClick={handleLogout} colorScheme="red" variant="outline">
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <NavLink href="/login">Login</NavLink>
+                <NavLink href="/register">Register</NavLink>
+              </>
+            )}
+          </VStack>
+        </DrawerBody>
+      </DrawerContent>
+    </Drawer>
+  )
+
+  return (
+    <Box
+      bg={bg}
+      borderBottom="1px"
+      borderColor={borderColor}
+      position="sticky"
+      top={0}
+      zIndex={1000}
+    >
+      <Flex
+        h={16}
+        alignItems="center"
+        justifyContent="space-between"
+        px={4}
+        maxW="7xl"
+        mx="auto"
+      >
+        {/* Logo */}
+        <Flex alignItems="center">
+          <Link href="/" passHref>
+            <ChakraLink _hover={{ textDecoration: 'none' }}>
+              <Heading as="h1" size="md" color="brand.500">
+                ETX Processor
+              </Heading>
+            </ChakraLink>
+          </Link>
+        </Flex>
+
+        {/* Desktop Navigation */}
+        <Flex alignItems="center" display={{ base: 'none', md: 'flex' }}>
+          <HStack spacing={8}>
+            <NavLink href="/">Home</NavLink>
+            {user ? (
+              <>
+                <NavLink href="/dashboard">Dashboard</NavLink>
+                <NavLink href="/profile">Profile</NavLink>
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    rounded="full"
+                    variant="link"
+                    cursor="pointer"
+                    minW={0}
+                  >
+                    <Avatar size="sm" name={user.username} src={user.avatar_url} />
+                  </MenuButton>
+                  <MenuList>
+                    <MenuItem>
+                      <Text fontWeight="bold">{user.username}</Text>
+                    </MenuItem>
+                    <MenuDivider />
+                    <MenuItem onClick={() => router.push('/profile')}>
+                      Profile
+                    </MenuItem>
+                    <MenuItem onClick={handleLogout} color="red.500">
+                      Logout
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+              </>
+            ) : (
+              <>
+                <NavLink href="/login">Login</NavLink>
+                <NavLink href="/register">Register</NavLink>
+              </>
+            )}
+          </HStack>
+        </Flex>
+
+        {/* Mobile menu button */}
+        <IconButton
+          display={{ base: 'flex', md: 'none' }}
+          onClick={onOpen}
+          variant="outline"
+          aria-label="Open menu"
+          icon={<HamburgerIcon />}
+        />
+      </Flex>
+
+      <MobileNav />
+    </Box>
+  )
+}

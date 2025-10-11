@@ -1,0 +1,403 @@
+# ETX Processor - Main Product Requirements Document
+
+## Project Overview
+
+**Project Name**: ETX Processor  
+**Version**: 1.0.0  
+**Type**: Full-Stack Web Application  
+**Target Platform**: AWS EC2 Deployment  
+
+### Core Purpose
+A comprehensive user management and data processing system with a modern web interface, designed for financial data processing with user authentication, role-based access control, and gamification elements.
+
+## Technical Architecture
+
+### Backend Architecture
+- **Framework**: Python FastAPI
+- **Authentication**: FastAPIUser (JWT-based)
+- **Database**: PostgreSQL with SQLAlchemy ORM
+- **File Storage**: AWS S3 for avatar images
+- **API Documentation**: OpenAPI/Swagger
+- **Deployment**: Docker containers on AWS EC2
+
+### Frontend Architecture
+- **Framework**: Next.js 13.x (App Router)
+- **UI Library**: Chakra UI
+- **Node Version**: Locked to Node 18.x
+- **State Management**: React Context + useReducer
+- **HTTP Client**: Axios
+- **Deployment**: Static export for AWS EC2
+
+## Project Structure
+
+```
+etxprocessor/
+├── backend/                 # Python FastAPI Backend
+│   ├── app/
+│   │   ├── api/            # API routes
+│   │   ├── core/           # Core configuration
+│   │   ├── models/         # Database models
+│   │   ├── schemas/        # Pydantic schemas
+│   │   ├── services/       # Business logic
+│   │   └── utils/          # Utility functions
+│   ├── tests/              # Backend tests
+│   ├── requirements.txt    # Python dependencies
+│   ├── Dockerfile         # Backend container
+│   └── main.py            # FastAPI entry point
+├── frontend/               # Next.js Frontend
+│   ├── src/
+│   │   ├── app/           # Next.js 13 app directory
+│   │   ├── components/    # Reusable components
+│   │   ├── hooks/         # Custom React hooks
+│   │   ├── services/      # API services
+│   │   └── utils/         # Utility functions
+│   ├── public/            # Static assets
+│   ├── package.json       # Node dependencies
+│   ├── next.config.js     # Next.js configuration
+│   └── Dockerfile         # Frontend container
+├── docker-compose.yml     # Local development
+├── .env.example          # Environment variables template
+├── README.md             # Project documentation
+└── main_prd.md           # This document
+```
+
+## Backend Requirements
+
+### Core Dependencies
+```python
+# requirements.txt
+fastapi==0.104.1
+fastapi-users[sqlalchemy]==12.1.2
+uvicorn[standard]==0.24.0
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.12.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+boto3==1.34.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+```
+
+### User Management System
+- **User Model Fields**:
+  - `id`: UUID primary key
+  - `username`: String, unique, required
+  - `email`: String, unique, required
+  - `password`: Hashed password
+  - `role`: Enum (admin, user, moderator)
+  - `avatar_url`: String, optional (S3 URL)
+  - `level`: Integer, default 1
+  - `exp`: Double, default 0.0
+  - `is_active`: Boolean, default True
+  - `is_verified`: Boolean, default False
+  - `created_at`: DateTime
+  - `updated_at`: DateTime
+
+### API Endpoints
+- **Authentication**:
+  - `POST /auth/register` - User registration
+  - `POST /auth/login` - User login
+  - `POST /auth/logout` - User logout
+  - `GET /auth/me` - Get current user
+  - `PUT /auth/me` - Update user profile
+
+- **User Management**:
+  - `GET /users/` - List users (admin only)
+  - `GET /users/{user_id}` - Get user by ID
+  - `PUT /users/{user_id}` - Update user (admin only)
+  - `DELETE /users/{user_id}` - Delete user (admin only)
+
+- **Avatar Management**:
+  - `POST /users/avatar` - Upload avatar image
+  - `DELETE /users/avatar` - Remove avatar image
+
+### Database Schema
+```sql
+-- Users table
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'user',
+    avatar_url VARCHAR(500),
+    level INTEGER DEFAULT 1,
+    exp DOUBLE PRECISION DEFAULT 0.0,
+    is_active BOOLEAN DEFAULT TRUE,
+    is_verified BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_role ON users(role);
+```
+
+## Frontend Requirements
+
+### Core Dependencies
+```json
+{
+  "dependencies": {
+    "next": "13.5.6",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@chakra-ui/react": "^2.8.2",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "framer-motion": "^10.16.5",
+    "axios": "^1.6.2",
+    "js-cookie": "^3.0.5",
+    "react-hook-form": "^7.48.2",
+    "react-icons": "^4.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "18.18.0",
+    "@types/react": "18.2.37",
+    "@types/react-dom": "18.2.15",
+    "@types/js-cookie": "^3.0.6",
+    "typescript": "5.2.2",
+    "eslint": "8.53.0",
+    "eslint-config-next": "13.5.6"
+  }
+}
+```
+
+### Page Structure
+- **Login Page** (`/login`):
+  - Username/email and password fields
+  - "Remember me" checkbox
+  - Link to registration page
+  - Form validation with error messages
+
+- **Register Page** (`/register`):
+  - Username, email, password, confirm password fields
+  - Password strength indicator
+  - Terms and conditions checkbox
+  - Link to login page
+
+- **Home Page** (`/`):
+  - User profile card with avatar, username, role
+  - Level and experience display with progress bar
+  - Navigation menu
+  - Logout functionality
+
+### Component Architecture
+- **AuthProvider**: Context for authentication state
+- **ProtectedRoute**: HOC for route protection
+- **UserProfile**: Displays user information
+- **LoginForm**: Login form component
+- **RegisterForm**: Registration form component
+- **Layout**: Main layout with navigation
+
+### State Management
+- **Authentication State**:
+  - User data (username, email, role, avatar, level, exp)
+  - Authentication status (isAuthenticated, isLoading)
+  - Token management
+
+- **UI State**:
+  - Form states and validation
+  - Loading states
+  - Error messages
+
+## Development Environment
+
+### Local Development Setup
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/etxprocessor
+      - SECRET_KEY=your-secret-key
+      - AWS_ACCESS_KEY_ID=your-access-key
+      - AWS_SECRET_ACCESS_KEY=your-secret-key
+      - AWS_S3_BUCKET=your-bucket-name
+    depends_on:
+      - db
+  
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+  
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=etxprocessor
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+```
+
+### Environment Variables
+```bash
+# .env.example
+# Backend
+DATABASE_URL=postgresql://user:password@localhost:5432/etxprocessor
+SECRET_KEY=your-secret-key-here
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+AWS_S3_BUCKET=your-s3-bucket-name
+AWS_REGION=us-east-1
+
+# Frontend
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_APP_NAME=ETX Processor
+```
+
+## Deployment Requirements
+
+### AWS EC2 Configuration
+- **Instance Type**: t3.medium (2 vCPU, 4GB RAM)
+- **Operating System**: Ubuntu 22.04 LTS
+- **Docker**: Latest version
+- **Docker Compose**: Latest version
+- **Nginx**: Reverse proxy and static file serving
+
+### Production Environment
+- **Database**: AWS RDS PostgreSQL
+- **File Storage**: AWS S3
+- **SSL**: Let's Encrypt certificates
+- **Domain**: Custom domain with DNS configuration
+- **Monitoring**: CloudWatch logs and metrics
+
+### Build and Deployment Scripts
+```bash
+# build.sh
+#!/bin/bash
+# Build and deploy to AWS EC2
+
+# Build backend
+cd backend
+docker build -t etxprocessor-backend .
+
+# Build frontend
+cd ../frontend
+docker build -t etxprocessor-frontend .
+
+# Deploy with docker-compose
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+## Security Requirements
+
+### Authentication Security
+- **Password Hashing**: bcrypt with salt rounds
+- **JWT Tokens**: Short-lived access tokens with refresh tokens
+- **Rate Limiting**: API rate limiting to prevent brute force attacks
+- **CORS**: Configured for frontend domain only
+
+### Data Protection
+- **Input Validation**: All inputs validated and sanitized
+- **SQL Injection**: Parameterized queries only
+- **XSS Protection**: Content Security Policy headers
+- **HTTPS**: SSL/TLS encryption in production
+
+### File Upload Security
+- **File Type Validation**: Only image files allowed
+- **File Size Limits**: Maximum 5MB per avatar
+- **Virus Scanning**: Scan uploaded files
+- **Secure Storage**: Files stored in S3 with proper permissions
+
+## Performance Requirements
+
+### Backend Performance
+- **Response Time**: API responses under 200ms
+- **Concurrent Users**: Support 100+ concurrent users
+- **Database**: Optimized queries with proper indexing
+- **Caching**: Redis for session management
+
+### Frontend Performance
+- **Page Load**: Initial page load under 3 seconds
+- **Bundle Size**: Optimized JavaScript bundles
+- **Image Optimization**: Next.js image optimization
+- **Lazy Loading**: Components loaded on demand
+
+## Testing Requirements
+
+### Backend Testing
+- **Unit Tests**: 90%+ code coverage
+- **Integration Tests**: API endpoint testing
+- **Database Tests**: Model and migration testing
+- **Security Tests**: Authentication and authorization testing
+
+### Frontend Testing
+- **Unit Tests**: Component testing with Jest
+- **Integration Tests**: API integration testing
+- **E2E Tests**: User flow testing with Playwright
+- **Accessibility Tests**: WCAG compliance testing
+
+## Monitoring and Logging
+
+### Application Monitoring
+- **Health Checks**: API health endpoints
+- **Error Tracking**: Centralized error logging
+- **Performance Metrics**: Response time and throughput
+- **User Analytics**: User behavior tracking
+
+### Logging Strategy
+- **Structured Logging**: JSON format logs
+- **Log Levels**: DEBUG, INFO, WARN, ERROR
+- **Log Rotation**: Daily log rotation
+- **Centralized Logging**: CloudWatch or ELK stack
+
+## Future Enhancements
+
+### Phase 2 Features
+- **Real-time Notifications**: WebSocket support
+- **Advanced User Management**: User roles and permissions
+- **Data Processing**: ETX data processing capabilities
+- **API Versioning**: API version management
+
+### Phase 3 Features
+- **Mobile App**: React Native mobile application
+- **Advanced Analytics**: User behavior analytics
+- **Third-party Integrations**: External service integrations
+- **Microservices**: Service decomposition
+
+## Task-Master-AI Integration
+
+This PRD serves as the primary source for task-master-ai task generation. The system will use this document to:
+
+1. **Generate Development Tasks**: Break down features into manageable tasks
+2. **Maintain Consistency**: Ensure all development follows the established patterns
+3. **Track Progress**: Monitor completion of features and requirements
+4. **Quality Assurance**: Validate implementations against requirements
+
+### Task Categories
+- **Backend Development**: API endpoints, database models, authentication
+- **Frontend Development**: React components, pages, state management
+- **DevOps**: Docker configuration, deployment scripts, monitoring
+- **Testing**: Unit tests, integration tests, E2E tests
+- **Documentation**: API docs, user guides, deployment guides
+
+### Success Criteria
+- All features implemented according to specifications
+- 90%+ test coverage for both backend and frontend
+- Successful deployment to AWS EC2
+- Performance requirements met
+- Security requirements satisfied
+- User acceptance testing passed
+
+---
+
+**Document Version**: 1.0.0  
+**Last Updated**: 2024-01-XX  
+**Next Review**: 2024-02-XX  
+**Status**: Draft
