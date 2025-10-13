@@ -18,6 +18,7 @@ class UserUpdate(BaseModel):
     avatar_url: Optional[str] = None
     level: Optional[int] = None
     exp: Optional[float] = None
+    etx_config: Optional[str] = None
 
 class UserResponse(UserBase):
     id: str
@@ -26,6 +27,7 @@ class UserResponse(UserBase):
     exp: float
     is_active: bool
     is_verified: bool
+    etx_config: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

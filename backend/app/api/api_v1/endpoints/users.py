@@ -5,6 +5,7 @@ from app.schemas.user import UserResponse, UserUpdate
 from app.services.user_service import UserService
 from app.core.auth import get_current_user
 from typing import List
+import json
 
 router = APIRouter()
 
@@ -28,6 +29,33 @@ async def update_current_user(
             detail="User not found"
         )
     return updated_user
+
+@router.get("/me/config", response_model=dict)
+async def get_my_config(
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user_service = UserService(db)
+    user = user_service.get_user_by_id(current_user.id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    try:
+        return json.loads(user.etx_config) if user.etx_config else {}
+    except Exception:
+        return {}
+
+@router.put("/me/config", response_model=dict)
+async def set_my_config(
+    config: dict,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user_service = UserService(db)
+    payload = UserUpdate(etx_config=json.dumps(config))
+    updated = user_service.update_user(current_user.id, payload)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return config
 
 @router.get("/", response_model=List[UserResponse])
 async def get_users(

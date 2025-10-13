@@ -26,3 +26,5 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
+    # JSON string holding per-user ETX batch configuration
+    etx_config = Column(String, nullable=True)

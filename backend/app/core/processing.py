@@ -1,0 +1,305 @@
+import os
+import json
+import csv
+import base64
+import shutil
+import uuid
+import logging
+import traceback
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
+import requests
+import websocket
+
+
+class ProcessingService:
+    """Refactored ETX batch utilities integrated with the project code style.
+    All previous helpers in etxbatch.py are converted into instance methods.
+    I/O is routed through the logger, and network calls use timeouts.
+    """
+
+    def __init__(self, logger: Optional[logging.Logger] = None) -> None:
+        self.logger = logger or logging.getLogger("processing")
+        if not self.logger.handlers:
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+            self.logger.addHandler(handler)
+        self.logger.setLevel(logging.INFO)
+
+        # state used by some batch flows
+        self.es_error_count = 0
+        self.es_success_count = 0
+        self.ess_df: Optional[pd.DataFrame] = None
+
+    # ----------------------------- basic utilities -----------------------------
+    def load_config(self) -> Dict[str, Any]:
+        config_path = os.path.join(os.path.dirname(__file__), 'etxbatch.json')
+        with open(config_path) as f:
+            return json.load(f)
+
+    def login(self, http_uri: str, email: str, password: str) -> Dict[str, Any]:
+        url = f"{http_uri}/fid-auth"
+        payload = {"login": {"email": email, "password": password}}
+        resp = requests.post(url, json=payload, timeout=30)
+        if resp.status_code != 200:
+            raise RuntimeError("Failed to log in")
+        return resp.json().get('login', {})
+
+    def connect_websocket(self, ws_uri: str) -> websocket.WebSocket:
+        ws = websocket.create_connection(ws_uri, timeout=30)
+        return ws
+
+    def wait_for_response(self, ws: websocket.WebSocket) -> Optional[Dict[str, Any]]:
+        try:
+            return json.loads(ws.recv())
+        except Exception:
+            self.logger.info("Cannot parse json from API response")
+            traceback.print_exc()
+            return None
+
+    # ----------------------------- high level flows ----------------------------
+    def ws_init(self, config: Dict[str, Any]) -> websocket.WebSocket:
+        http_uri = config['HTTPURI']
+        ws_uri = config['WSURI']
+        email = config['email']
+        password = config['password']
+
+        login_payload = self.login(http_uri, email, password)
+        fid = login_payload['fid']
+
+        ws_url = f"{ws_uri}/fid-{fid}"
+        ws = self.connect_websocket(ws_url)
+
+        # set org
+        ws.send(self.build_set_org(mid="m2"))
+        _ = self.wait_for_response(ws)
+        return ws
+
+    @staticmethod
+    def build_set_org(mid: Optional[str] = None) -> str:
+        lines: List[str] = []
+        lines.append("#")
+        lines.append("$org = GetOrgs().Orgs.getFirst()")
+        lines.append(f"$args.mid = '{mid}'")
+        lines.append("$args.id = useof $org.owner defto $org.id")
+        lines.append("$args.timeZone = 'Asia/Bangkok'")
+        lines.append("SetOrg($args)\n")
+        return "\n".join(lines)
+
+    # ----------------------------- csv utilities ------------------------------
+    def check_csv(self, file_name: str) -> List[List[str]]:
+        if not os.path.isfile(file_name):
+            raise FileNotFoundError(f"File not found: {file_name}")
+        with open(file_name, newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            rows = list(reader)
+            if not rows:
+                raise ValueError("CSV is empty")
+            width = len(rows[0])
+            if not all(len(r) == width for r in rows):
+                raise ValueError("CSV format is incorrect: inconsistent columns")
+            return rows
+
+    def create_temp_folder(self) -> str:
+        tmp = 'etxtemp'
+        os.makedirs(tmp, exist_ok=True)
+        return tmp
+
+    def split_csv(self, rows: List[List[str]], temp_folder: str, rows_per_file: int) -> List[str]:
+        file_names: List[str] = []
+        header = rows[0]
+        for i in range(1, len(rows), rows_per_file):
+            chunk = rows[i:i + rows_per_file]
+            out = os.path.join(temp_folder, f"chunk_{i // rows_per_file}.csv")
+            with open(out, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(header)
+                writer.writerows(chunk)
+            file_names.append(out)
+        return file_names
+
+    # ------------------------------- http utils -------------------------------
+    def ext_request(self, method: str, api_name: str, headers: Optional[Dict[str, str]] = None, data: Any = None) -> requests.Response:
+        config = self.load_config()
+        uri = config.get("HTTPURI", "")
+        api_key = config.get("API_KEY", "")
+        api_version = config.get("API_VERSION", "ctx/v1")
+        url = f"{uri}/{api_version}/{api_name}"
+
+        headers = headers.copy() if headers else {}
+        headers.update({'DTX-DS-KEY': api_key})
+        return requests.request(method, url, headers=headers, data=data, timeout=60)
+
+    def get_all_es(self) -> pd.DataFrame:
+        response = self.ext_request(method="GET", api_name="GetAllESs", data="")
+        es_json = response.json()
+        df = pd.DataFrame(es_json["GetAllESs"]["Results"]["EmissionSources"])
+        self.logger.info(df)
+        return df
+
+    def publish_bar_data(self, es_id: str, bar_name: str, csv_data: str) -> bool:
+        payload = json.dumps({"esId": es_id, "bartName": bar_name, "data": {"csv": csv_data}})
+        self.logger.info("Publishing BAR data")
+        try:
+            response = self.ext_request(method="POST", api_name="PublishBARData", data=payload)
+            resp_json = response.json()
+        except Exception:
+            self.logger.error("PublishBARData returned non-JSON response")
+            return False
+
+        node = resp_json.get('PublishBARData') or {}
+        status_code = node.get('statusCode')
+        if status_code != 200:
+            self.es_error_count += 1
+            self.logger.info(f"Can't Publish: {es_id}")
+            self.logger.info(f"Es error count: {self.es_error_count}")
+            return False
+
+        self.es_success_count += 1
+        self.logger.info(f"Es success count: {self.es_success_count}")
+        return True
+
+    # ------------------------------ processing --------------------------------
+    def process_csv_file(self, file_path: str) -> None:
+        if self.ess_df is None:
+            raise RuntimeError("ESS dataframe not loaded")
+
+        csv_data_df = pd.read_csv(file_path)
+        es_column = "emissionSourceName"
+        full_org_column = "orgFullName"
+        full_es_column = "EsFullName"
+
+        bar_name = os.path.splitext(os.path.basename(file_path))[0]
+
+        if (full_org_column in csv_data_df.columns) and (es_column in csv_data_df.columns):
+            csv_data_df[full_es_column] = csv_data_df[full_org_column] + " : " + csv_data_df[es_column].astype(str)
+            grouped = csv_data_df.groupby([full_es_column])
+
+            for _, group_df in grouped:
+                es_fullname = group_df[full_es_column].iloc[0] if full_es_column in group_df.columns else ''
+                if full_es_column in group_df.columns:
+                    cols_to_remove = [full_org_column, es_column, full_es_column]
+                    group_df = group_df.drop(columns=cols_to_remove, errors='ignore')
+
+                es_id = ''
+                if es_fullname:
+                    filtered_df = self.ess_df[self.ess_df[full_es_column].str.contains(es_fullname.replace(":", "/"), regex=False)]
+                    if not filtered_df.empty:
+                        es_id = str(filtered_df["EsSID"].iloc[0])
+
+                csv_payload = group_df.to_csv(index=False)
+                if es_id and bar_name:
+                    self.publish_bar_data(es_id, bar_name, csv_payload)
+                else:
+                    self.logger.error(f"Can't Find Emission Source ID for: {es_fullname}")
+        else:
+            self.logger.info("File is invalid")
+
+    def process_folder(self, data_folder: str) -> bool:
+        for root, _dirs, files in os.walk(data_folder):
+            for file in files:
+                if file.endswith(".csv"):
+                    self.process_csv_file(os.path.join(root, file))
+        return True
+
+    # ------------------------------- public APIs -------------------------------
+    def ingestes(self, data_file: Optional[str] = None, offset: int = 0, nrows: int = 100000) -> str:
+        config = self.load_config()
+        ws = self.ws_init(config)
+        folder = config.get("ServerFileFolder", "")
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        fname, ext = os.path.splitext(os.path.basename(data_file or 'data.csv'))
+        file_name = f"{fname}_{timestamp}{ext}"
+
+        try:
+            with open(data_file or '', 'rb') as f:
+                base64_string = base64.b64encode(f.read()).decode('utf-8')
+        except Exception as e:
+            traceback.print_exc()
+            self.logger.error(f"An error occurred: {e}")
+            ws.close()
+            return "Failed!!"
+
+        payload = f"""#\nUploadBase64Imp:\n    mid: '{uuid.uuid4()}'\n    fileName: '{file_name}'\n    content: '{base64_string}'\n"""
+        self.logger.info("Uploading base64 file")
+        ws.send(payload)
+        resp = self.wait_for_response(ws) or {}
+        try:
+            data_file = resp.get("UploadBase64Imp", {}).get("Message", {}).get("FilePath")
+        except Exception:
+            traceback.print_exc()
+            self.logger.error("Cannot upload data file!")
+
+        if not data_file:
+            ws.close()
+            return "Failed!!"
+
+        ingest_payload = f"""#\nPyRequest:\n    app: etx_batch\n    value:\n        Input:\n            action: es_data_importer\n            data_file_path: \"{os.path.join(folder, data_file)}\"\n            offset: {offset}\n            nrows: {nrows}\n            tracking: true"""
+
+        ws.send(ingest_payload)
+        _ = self.wait_for_response(ws)
+        ws.close()
+        return "Successfully!!"
+
+    def ingestbar(self, data_folder: Optional[str] = None) -> str:
+        config = self.load_config()
+        folder = config.get("ServerFileFolder", "")
+        self.es_error_count = 0
+        self.es_success_count = 0
+        self.ess_df = self.get_all_es()
+
+        start_time = datetime.now()
+        self.logger.info(f"Start Time: {start_time}")
+        self.process_folder(data_folder=os.path.join(folder, data_folder or ''))
+        end_time = datetime.now()
+        self.logger.info(f"End Time: {end_time}")
+        return "Successfully!!"
+
+    def addtenant(self, tenantName: Optional[str] = None) -> str:
+        config = self.load_config()
+        ws = self.ws_init(config)
+        payload = f"""#\nCreateTenantAccount:\n    Name: \"{tenantName}\"\n    AutoCreateDatabase: True\n    """
+        ws.send(payload)
+        _ = self.wait_for_response(ws)
+        ws.close()
+        return "Successfully!!"
+
+    def createorg(self, dataFile: Optional[str] = None, tenantName: Optional[str] = None) -> str:
+        config = self.load_config()
+        ws = self.ws_init(config)
+        mid = uuid.uuid4()
+        ws.send("""#\nGetOrgs:\n    mid: '1360bce9-30ce-4c86-9749-92faa7f7114f'""")
+        resp = self.wait_for_response(ws) or {}
+        dict_org = (resp.get("GetOrgs", {}) or {}).get("Orgs", {})
+        org_id = ''
+        for key, value in dict_org.items():
+            if value.get('name') == tenantName:
+                org_id = key
+        df = pd.read_csv(dataFile or '')
+        csv_string = df.to_csv(index=False)
+        setorg = f"""#\n$org = GetOrgs().Orgs.getFirst()\n$args.mid = 'm1'\n$args.id = '{org_id}' # Org Id of Tenant\nSetOrg($args)\n    """
+        ws.send(setorg)
+        _ = self.wait_for_response(ws)
+        payload = f"""#\nAsync => CreateOrgStructureFromCsv(mid: \"{mid}\", data: '{csv_string}')"""
+        ws.send(payload)
+        _ = self.wait_for_response(ws)
+        ws.close()
+        return "Successfully!!"
+
+    def updateversion(self, version: Optional[str] = None) -> str:
+        config = self.load_config()
+        ws = self.ws_init(config)
+        formatted_date = datetime.now().strftime("%d-%m-%Y")
+        payload = f"""    #\n    SetVersion:\n        mid: "m2"\n        etxVersion: {version}\n        releaseDate: {formatted_date}\n        description: "dev server"\n    """
+        ws.send(payload)
+        _ = self.wait_for_response(ws)
+        ws.close()
+        return "Successfully!!"
+
+
+# Singleton-like instance for importers
+processing_service = ProcessingService()
+
+

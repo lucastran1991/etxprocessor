@@ -76,6 +76,7 @@ export default function Header() {
                 <NavLink href="/dashboard">Dashboard</NavLink>
                 <NavLink href="/files">Files</NavLink>
                 <NavLink href="/processing">Processing</NavLink>
+                <NavLink href="/config">Config</NavLink>
                 <NavLink href="/profile">Profile</NavLink>
                 <Button onClick={toggleColorMode} variant="outline">
                   {colorMode === 'light' ? 'Dark mode' : 'Light mode'}
@@ -134,6 +135,7 @@ export default function Header() {
                 <NavLink href="/dashboard">Dashboard</NavLink>
                 <NavLink href="/files">Files</NavLink>
                 <NavLink href="/processing">Processing</NavLink>
+                <NavLink href="/config">Config</NavLink>
                 <NavLink href="/profile">Profile</NavLink>
                 <IconButton
                   aria-label="Toggle color mode"

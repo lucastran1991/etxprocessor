@@ -1,0 +1,13 @@
+{
+    "HTTPURI": "http://ctxdemo.atomiton.com:8084",
+    "WSURI": "ws://ctxdemo.atomiton.com:8084",
+    "email": "productdemo@atomiton.com",
+    "password": "D3mo@2025",
+    "ServerFileFolder": "/Users/baseerkhan/code/workspace/atomiton/runtime2/sustainability/server/spaces/csv/spnData",
+    "RowsPerFile": 25,
+    "ImportFilePerRequest": 1,
+    "MaxRequests": 2,
+    "API_KEY": "AQICAHjMXgtY9KjKaPbxho/q+IqAU3EoBqN4emVlah0OvjOOTgERwjX2mHIi3NAcoXgSHZNnAAABFDCCARAGCSqGSIb3DQEHBqCCAQEwgf4CAQAwgfgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMlbXCKtXzqwqKB7U2AgEQgIHKK84GyIGu13n6SFNOGZiV+m49MrLYzP0pRKn/q2nlrt48GppMbV7dXK2pQPB2Yc6o/3tGprX6cQodfd4tw8J7k5bx33lRzHQF713Leorrrvxe+GweBheYxinABcNIyvcz1r3R0nixOn6NyNdSnyulA1LwJuPLMaReolosJCzU50uaUh1EClj+a1vpU/a7gzUdvLsa2mLdDCTVz1/zO5bPWnUkmAqa10LnsfxgOhhixfzPYocWPzMeutw/2b3cWo8x6wq+bmlXFwky4g==",
+    "API_VERSION": "ctx/v1",
+    "GATE_WAY": "ws"
+}

@@ -20,7 +20,7 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react'
 import {
-  ChevronRightIcon,
+  ChevronUpIcon,
   ChevronDownIcon,
   DeleteIcon,
 } from '@chakra-ui/icons'
@@ -130,7 +130,7 @@ function FileTreeItem({
             transform={isOpen ? 'rotate(0deg)' : 'rotate(0deg)'}
           >
             <Icon
-              as={isOpen ? ChevronDownIcon : ChevronRightIcon}
+              as={isOpen ? ChevronDownIcon : ChevronUpIcon}
               boxSize={4}
               color={chevronColor}
             />
@@ -383,19 +383,6 @@ export default function FileExplorer({ onFileSelect, onRefresh, readOnly = false
 
   return (
     <VStack align="stretch" spacing={2}>
-      {fileTree.map((node) => (
-        <FileTreeItem
-          key={node.id}
-          node={node}
-          onDelete={handleDelete}
-          onSelect={onFileSelect}
-          onCreateFolder={handleCreateFolder}
-          readOnly={readOnly}
-          hideItemDelete={hideItemDelete}
-          expandSignal={expandSignal}
-          collapseSignal={collapseSignal}
-        />
-      ))}
       {!readOnly && (
         <HStack justify="space-between" px={2} py={2}>
           <IconButton
@@ -407,7 +394,7 @@ export default function FileExplorer({ onFileSelect, onRefresh, readOnly = false
             onClick={() => handleCreateFolder('/')}
             isDisabled={isLoading}
           />
-          <HStack spacing={2}>
+          <HStack>
             <IconButton
               aria-label="Expand all"
               icon={<ChevronDownIcon />}
@@ -418,7 +405,7 @@ export default function FileExplorer({ onFileSelect, onRefresh, readOnly = false
             />
             <IconButton
               aria-label="Collapse all"
-              icon={<ChevronRightIcon />}
+              icon={<ChevronUpIcon />}
               variant="outline"
               size="sm"
               onClick={() => setCollapseSignal((v) => v + 1)}
@@ -436,6 +423,19 @@ export default function FileExplorer({ onFileSelect, onRefresh, readOnly = false
           />
         </HStack>
       )}
+      {fileTree.map((node) => (
+        <FileTreeItem
+          key={node.id}
+          node={node}
+          onDelete={handleDelete}
+          onSelect={onFileSelect}
+          onCreateFolder={handleCreateFolder}
+          readOnly={readOnly}
+          hideItemDelete={hideItemDelete}
+          expandSignal={expandSignal}
+          collapseSignal={collapseSignal}
+        />
+      ))}
     </VStack>
   )
 }
