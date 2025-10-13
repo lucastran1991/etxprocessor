@@ -98,43 +98,109 @@ class FileService:
             File.user_id == user_id
         ).order_by(File.folder_path, File.is_folder.desc(), File.original_filename).all()
 
-        # Build a tree structure
-        tree_dict = {}
-        root_items = []
+        if not all_files:
+            return []
 
-        # First, create all nodes
-        for file in all_files:
+        # Create a mapping of folder_path -> folder node
+        folder_map = {}
+        
+        # Separate folders and files
+        folders = [f for f in all_files if f.is_folder]
+        files = [f for f in all_files if not f.is_folder]
+        
+        # First pass: Create all folder nodes
+        for folder in folders:
+            node = FileTreeNode(
+                id=str(folder.id),
+                name=folder.original_filename,
+                type="folder",
+                size=None,
+                mime_type=None,
+                path=folder.folder_path,
+                uploaded_at=folder.uploaded_at,
+                children=[]
+            )
+            # Map the full path of this folder for easy lookup
+            full_path = folder.folder_path.rstrip('/') if folder.folder_path != '/' else '/'
+            folder_map[full_path] = node
+        
+        # Second pass: Build folder hierarchy
+        root_folders = []
+        orphaned_folders = []
+        
+        for folder in folders:
+            full_path = folder.folder_path.rstrip('/') if folder.folder_path != '/' else '/'
+            node = folder_map[full_path]
+            
+            if folder.folder_path == '/':
+                # Root level folder
+                root_folders.append(node)
+            else:
+                # Find parent folder path
+                parent_path = '/'.join(folder.folder_path.rstrip('/').split('/')[:-1])
+                if not parent_path:
+                    parent_path = '/'
+                
+                # Try to find parent in folder_map
+                if parent_path in folder_map:
+                    folder_map[parent_path].children.append(node)
+                else:
+                    # Parent doesn't exist, this is an orphaned folder
+                    orphaned_folders.append(node)
+        
+        # Third pass: Add files to their respective folders
+        root_files = []
+        orphaned_files = []
+        
+        for file in files:
             node = FileTreeNode(
                 id=str(file.id),
                 name=file.original_filename,
-                type="folder" if file.is_folder else "file",
-                size=file.file_size if not file.is_folder else None,
+                type="file",
+                size=file.file_size,
                 mime_type=file.mime_type,
                 path=file.folder_path,
                 uploaded_at=file.uploaded_at,
-                children=[] if file.is_folder else None
+                children=None
             )
-            tree_dict[str(file.id)] = (node, file)
-
-        # Build the tree structure
-        for file_id, (node, file) in tree_dict.items():
-            if file.folder_path == "/":
-                root_items.append(node)
+            
+            if file.folder_path == '/':
+                # Root level file
+                root_files.append(node)
             else:
-                # Find parent folder
-                parent_path = "/".join(file.folder_path.rstrip("/").split("/")[:-1]) or "/"
-                parent = next(
-                    (f for f in all_files if f.is_folder and f.folder_path == parent_path and f.original_filename == file.folder_path.rstrip("/").split("/")[-1]),
-                    None
-                )
-                if parent and str(parent.id) in tree_dict:
-                    parent_node = tree_dict[str(parent.id)][0]
-                    if parent_node.children is not None:
-                        parent_node.children.append(node)
+                # Try to find parent folder
+                parent_path = file.folder_path.rstrip('/')
+                if parent_path in folder_map:
+                    folder_map[parent_path].children.append(node)
                 else:
-                    root_items.append(node)
-
-        return root_items
+                    # Parent folder doesn't exist, this is an orphaned file
+                    orphaned_files.append(node)
+        
+        # Sort children of each folder: folders first, then files, alphabetically
+        for folder_node in folder_map.values():
+            if folder_node.children:
+                folder_node.children.sort(key=lambda x: (x.type == 'file', x.name.lower()))
+        
+        # Build final result: root folders, root files, orphaned folders, orphaned files
+        result = []
+        
+        # Add root folders (sorted)
+        root_folders.sort(key=lambda x: x.name.lower())
+        result.extend(root_folders)
+        
+        # Add root files (sorted)
+        root_files.sort(key=lambda x: x.name.lower())
+        result.extend(root_files)
+        
+        # Add orphaned folders at the bottom (sorted)
+        orphaned_folders.sort(key=lambda x: x.name.lower())
+        result.extend(orphaned_folders)
+        
+        # Add orphaned files at the bottom (sorted)
+        orphaned_files.sort(key=lambda x: x.name.lower())
+        result.extend(orphaned_files)
+        
+        return result
 
     def search_files(self, user_id: str, query: str) -> List[File]:
         """Search files by name"""
