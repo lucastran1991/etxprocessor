@@ -26,11 +26,12 @@ import {
   HStack,
   Link as ChakraLink
 } from '@chakra-ui/react'
-import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons'
+import { HamburgerIcon, CloseIcon, SunIcon, MoonIcon } from '@chakra-ui/icons'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getImageUrl } from '@/utils/imageUrl'
+import { useColorMode } from '@chakra-ui/react'
 
 export default function Header() {
   const { user, logout } = useAuth()
@@ -38,6 +39,7 @@ export default function Header() {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const bg = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('gray.200', 'gray.700')
+  const { colorMode, toggleColorMode } = useColorMode()
 
   const handleLogout = () => {
     logout()
@@ -75,6 +77,9 @@ export default function Header() {
                 <NavLink href="/files">Files</NavLink>
                 <NavLink href="/processing">Processing</NavLink>
                 <NavLink href="/profile">Profile</NavLink>
+                <Button onClick={toggleColorMode} variant="outline">
+                  {colorMode === 'light' ? 'Dark mode' : 'Light mode'}
+                </Button>
                 <Button onClick={handleLogout} colorScheme="red" variant="outline">
                   Logout
                 </Button>
@@ -83,6 +88,9 @@ export default function Header() {
               <>
                 <NavLink href="/login">Login</NavLink>
                 <NavLink href="/register">Register</NavLink>
+                <Button onClick={toggleColorMode} variant="outline">
+                  {colorMode === 'light' ? 'Dark mode' : 'Light mode'}
+                </Button>
               </>
             )}
           </VStack>
@@ -127,6 +135,12 @@ export default function Header() {
                 <NavLink href="/files">Files</NavLink>
                 <NavLink href="/processing">Processing</NavLink>
                 <NavLink href="/profile">Profile</NavLink>
+                <IconButton
+                  aria-label="Toggle color mode"
+                  onClick={toggleColorMode}
+                  variant="ghost"
+                  icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+                />
                 <Menu>
                   <MenuButton
                     as={Button}
@@ -155,6 +169,12 @@ export default function Header() {
               <>
                 <NavLink href="/login">Login</NavLink>
                 <NavLink href="/register">Register</NavLink>
+                <IconButton
+                  aria-label="Toggle color mode"
+                  onClick={toggleColorMode}
+                  variant="ghost"
+                  icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+                />
               </>
             )}
           </HStack>

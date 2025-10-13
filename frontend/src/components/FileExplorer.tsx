@@ -17,6 +17,7 @@ import {
   MenuList,
   MenuItem,
   useToast,
+  useColorModeValue,
 } from '@chakra-ui/react'
 import {
   ChevronRightIcon,
@@ -68,6 +69,13 @@ function FileTreeItem({
   const { isOpen, onToggle, onOpen, onClose } = useDisclosure({ defaultIsOpen: level === 0 })
   const hasChildren = node.children && node.children.length > 0
   const isFolder = node.type === 'folder'
+  const rowHoverBg = useColorModeValue(isFolder ? 'brand.50' : 'gray.100', isFolder ? 'whiteAlpha.100' : 'whiteAlpha.50')
+  const chevronHoverBg = useColorModeValue('gray.200', 'whiteAlpha.200')
+  const chevronColor = useColorModeValue('brand.600', 'brand.300')
+  const folderIconColor = useColorModeValue('brand.600', 'brand.300')
+  const fileIconColor = useColorModeValue('brand.400', 'brand.300')
+  const nameColor = useColorModeValue(isFolder ? 'gray.800' : 'gray.700', 'gray.100')
+  const metaColor = useColorModeValue('gray.500', 'gray.400')
 
   const formatFileSize = (bytes: number | undefined) => {
     if (!bytes) return ''
@@ -102,7 +110,7 @@ function FileTreeItem({
         py={1.5}
         px={2}
         pl={level * 4 + 2}
-        _hover={{ bg: isFolder ? 'blue.50' : 'gray.50', cursor: 'pointer' }}
+        _hover={{ bg: rowHoverBg, cursor: 'pointer' }}
         borderRadius="md"
         transition="all 0.2s"
         onClick={handleClick}
@@ -117,14 +125,14 @@ function FileTreeItem({
             }}
             p={1}
             borderRadius="sm"
-            _hover={{ bg: 'gray.200' }}
+            _hover={{ bg: chevronHoverBg }}
             transition="transform 0.2s"
             transform={isOpen ? 'rotate(0deg)' : 'rotate(0deg)'}
           >
             <Icon
               as={isOpen ? ChevronDownIcon : ChevronRightIcon}
               boxSize={4}
-              color="gray.600"
+              color={chevronColor}
             />
           </Box>
         ) : (
@@ -134,7 +142,7 @@ function FileTreeItem({
         {/* Folder/File Icon */}
         <Icon
           as={isFolder ? (isOpen ? FaFolderOpen : FaFolder) : FaFile}
-          color={isFolder ? 'yellow.600' : 'blue.500'}
+          color={isFolder ? folderIconColor : fileIconColor}
           boxSize={4}
         />
         
@@ -144,7 +152,7 @@ function FileTreeItem({
           fontSize="sm" 
           noOfLines={1}
           fontWeight={isFolder ? 'semibold' : 'normal'}
-          color={isFolder ? 'gray.800' : 'gray.700'}
+          color={nameColor}
         >
           {node.name}
         </Text>
@@ -158,7 +166,7 @@ function FileTreeItem({
         
         {/* Folder Item Count */}
         {isFolder && hasChildren && (
-          <Text fontSize="xs" color="gray.500" minW="40px" textAlign="right">
+          <Text fontSize="xs" color={metaColor} minW="40px" textAlign="right">
             {node.children?.length} {node.children?.length === 1 ? 'item' : 'items'}
           </Text>
         )}
