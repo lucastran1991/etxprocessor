@@ -51,5 +51,14 @@ class UserService:
         self.db.refresh(user)
         return user
 
+    def reset_password_by_email(self, email: str, new_password: str) -> Optional[User]:
+        user = self.get_user_by_email(email)
+        if not user:
+            return None
+        user.password = get_password_hash(new_password)
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
     def get_users(self, skip: int = 0, limit: int = 100) -> List[User]:
         return self.db.query(User).offset(skip).limit(limit).all()

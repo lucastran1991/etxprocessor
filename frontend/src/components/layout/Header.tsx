@@ -28,7 +28,7 @@ import {
 } from '@chakra-ui/react'
 import { HamburgerIcon, CloseIcon, SunIcon, MoonIcon } from '@chakra-ui/icons'
 import { useAuth } from '@/hooks/useAuth'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { getImageUrl } from '@/utils/imageUrl'
 import { useColorMode } from '@chakra-ui/react'
@@ -46,21 +46,29 @@ export default function Header() {
     router.push('/')
   }
 
-  const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <ChakraLink
-      as={Link}
-      href={href}
-      px={2}
-      py={1}
-      rounded="md"
-      _hover={{
-        textDecoration: 'none',
-        bg: useColorModeValue('gray.200', 'gray.700'),
-      }}
-    >
-      {children}
-    </ChakraLink>
-  )
+  const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
+    const pathname = usePathname()
+    const isActive = pathname === href || (href !== '/' && pathname.startsWith(href))
+    const hoverBg = useColorModeValue('gray.200', 'gray.700')
+    const activeBg = useColorModeValue('brand.50', 'whiteAlpha.200')
+    const activeColor = useColorModeValue('brand.700', 'brand.200')
+    return (
+      <ChakraLink
+        as={Link}
+        href={href}
+        px={2}
+        py={1}
+        rounded="md"
+        color={isActive ? activeColor : undefined}
+        bg={isActive ? activeBg : 'transparent'}
+        borderBottom={isActive ? '2px solid' : '2px solid transparent'}
+        borderColor={isActive ? 'brand.500' : 'transparent'}
+        _hover={{ textDecoration: 'none', bg: hoverBg }}
+      >
+        {children}
+      </ChakraLink>
+    )
+  }
 
   const MobileNav = () => (
     <Drawer isOpen={isOpen} onClose={onClose} placement="right">
@@ -74,9 +82,9 @@ export default function Header() {
             {user ? (
               <>
                 <NavLink href="/dashboard">Dashboard</NavLink>
+                <NavLink href="/config">Config</NavLink>
                 <NavLink href="/files">Files</NavLink>
                 <NavLink href="/processing">Processing</NavLink>
-                <NavLink href="/config">Config</NavLink>
                 <NavLink href="/profile">Profile</NavLink>
                 <Button onClick={toggleColorMode} variant="outline">
                   {colorMode === 'light' ? 'Dark mode' : 'Light mode'}
@@ -133,9 +141,9 @@ export default function Header() {
             {user ? (
               <>
                 <NavLink href="/dashboard">Dashboard</NavLink>
+                <NavLink href="/config">Config</NavLink>
                 <NavLink href="/files">Files</NavLink>
                 <NavLink href="/processing">Processing</NavLink>
-                <NavLink href="/config">Config</NavLink>
                 <NavLink href="/profile">Profile</NavLink>
                 <IconButton
                   aria-label="Toggle color mode"
@@ -158,11 +166,11 @@ export default function Header() {
                       <Text fontWeight="bold">{user.username}</Text>
                     </MenuItem>
                     <MenuDivider />
-                    <MenuItem onClick={() => router.push('/profile')}>
+                    {/* <MenuItem onClick={() => router.push('/profile')}>
                       Profile
-                    </MenuItem>
+                    </MenuItem> */}
                     <MenuItem onClick={handleLogout} color="red.500">
-                      Logout
+                      Lấy dép, ra về
                     </MenuItem>
                   </MenuList>
                 </Menu>

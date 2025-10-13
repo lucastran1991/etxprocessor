@@ -5,6 +5,7 @@ from app.schemas.user import UserResponse, UserUpdate
 from app.services.user_service import UserService
 from app.core.auth import get_current_user
 from typing import List
+from app.models.user import UserRole
 import json
 
 router = APIRouter()
@@ -61,15 +62,9 @@ async def set_my_config(
 async def get_users(
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
-    """Get list of users (admin only)"""
-    if current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
+    """Get list of users (public)"""
     
     user_service = UserService(db)
     users = user_service.get_users(skip=skip, limit=limit)
@@ -81,12 +76,7 @@ async def get_user(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    """Get user by ID (admin only)"""
-    if current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
+    """Get user by ID (open to all authenticated users)"""
     
     user_service = UserService(db)
     user = user_service.get_user_by_id(user_id)

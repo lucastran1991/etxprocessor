@@ -1,18 +1,24 @@
 'use client'
 
-import { Box, Container, Heading, Text, VStack, Grid, GridItem, Card, CardBody, Stat, StatLabel, StatNumber, StatHelpText, StatArrow, useColorModeValue, HStack, Badge } from '@chakra-ui/react'
+import { Box, Container, Heading, Text, VStack, Grid, GridItem, Card, CardBody, Stat, StatLabel, StatNumber, StatHelpText, StatArrow, useColorModeValue, HStack, Badge, Table, Thead, Tr, Th, Tbody, Td, Avatar, Button, SimpleGrid } from '@chakra-ui/react'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/layout/Layout'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/services/apiClient'
+import { getImageUrl } from '@/utils/imageUrl'
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const cardBg = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('gray.200', 'gray.700')
+  const listBg = useColorModeValue('gray.50', 'gray.700')
   const [storage, setStorage] = useState<any | null>(null)
+  const [usersList, setUsersList] = useState<any[]>([])
+  const [usersPage, setUsersPage] = useState(0)
+  const usersPageSize = 12
+  const [usersHasMore, setUsersHasMore] = useState(false)
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -25,6 +31,19 @@ export default function Dashboard() {
       apiClient.get('/files/storage').then(res => setStorage(res.data)).catch(() => {})
     }
   }, [user])
+
+  useEffect(() => {
+    // Public endpoint; fetch paginated
+    const skip = usersPage * usersPageSize
+    apiClient.get(`/users?skip=${skip}&limit=${usersPageSize}`).then(res => {
+      const arr = res.data || []
+      setUsersList(arr)
+      setUsersHasMore(arr.length === usersPageSize)
+    }).catch(() => {
+      setUsersList([])
+      setUsersHasMore(false)
+    })
+  }, [usersPage])
 
   if (isLoading) {
     return (
@@ -191,6 +210,39 @@ export default function Dashboard() {
                 </Text>
               </CardBody>
             </Card>
+          </Box>
+
+          <Box>
+            <Heading as="h2" size="lg" mb={4}>
+              System Users
+            </Heading>
+            {usersList.length === 0 ? (
+                  <Text color="gray.600">No users to display.</Text>
+            ) : (
+              <Box bg={listBg} borderRadius="md">
+                <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={4}>
+                  {usersList.map((u) => (
+                    <Card key={u.id} borderColor={borderColor} borderWidth="1px">
+                      <CardBody>
+                        <HStack spacing={4} align="center">
+                          <Avatar size="md" name={u.username} src={getImageUrl(u.avatar_url)} />
+                          <VStack align="start" spacing={0}>
+                            <Text fontWeight="bold">{u.username}</Text>
+                            <Text fontSize="sm" color="gray.500">{u.email}</Text>
+                            <Badge mt={1}>{typeof u.role === 'string' ? u.role : (u.role?.value || '')}</Badge>
+                          </VStack>
+                        </HStack>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </SimpleGrid>
+              </Box>
+            )}
+            <HStack mt={4} justify="space-between">
+              <Button size="sm" variant="outline" onClick={() => setUsersPage((p) => Math.max(0, p - 1))} isDisabled={usersPage === 0}>Previous</Button>
+              <Text fontSize="sm">Page {usersPage + 1}</Text>
+              <Button size="sm" variant="outline" onClick={() => setUsersPage((p) => p + 1)} isDisabled={!usersHasMore}>Next</Button>
+            </HStack>
           </Box>
         </VStack>
       </Container>
