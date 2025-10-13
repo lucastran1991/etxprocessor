@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favicon Generator</title>
+</head>
+<body>
+    <canvas id="canvas16" width="16" height="16"></canvas>
+    <canvas id="canvas32" width="32" height="32"></canvas>
+    <canvas id="canvas180" width="180" height="180"></canvas>
+    <script>
+        // Function to draw favicon on canvas
+        function drawFavicon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient circle
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#3182CE');
+            gradient.addColorStop(1, '#2C5282');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/2 - 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Border
+            ctx.strokeStyle = '#2C5282';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // ETX text
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${size * 0.35}px Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('ETX', size/2, size/2);
+            
+            // Accent line at bottom
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillRect(size * 0.2, size * 0.75, size * 0.6, size * 0.03);
+        }
+        
+        // Draw on all canvases
+        drawFavicon(document.getElementById('canvas16'), 16);
+        drawFavicon(document.getElementById('canvas32'), 32);
+        drawFavicon(document.getElementById('canvas180'), 180);
+        
+        // Instructions
+        console.log('Right-click each canvas and "Save Image As..." to create PNG files');
+        console.log('Save as: favicon-16x16.png, favicon-32x32.png, apple-touch-icon.png');
+    </script>
+    <div style="font-family: Arial; padding: 20px;">
+        <h2>Favicon Generator</h2>
+        <p>Right-click each canvas below and select "Save Image As..." to download:</p>
+        <div style="margin: 20px 0;">
+            <h3>16x16 (save as: favicon-16x16.png)</h3>
+            <canvas id="display16"></canvas>
+        </div>
+        <div style="margin: 20px 0;">
+            <h3>32x32 (save as: favicon-32x32.png)</h3>
+            <canvas id="display32"></canvas>
+        </div>
+        <div style="margin: 20px 0;">
+            <h3>180x180 (save as: apple-touch-icon.png)</h3>
+            <canvas id="display180"></canvas>
+        </div>
+    </div>
+    <script>
+        // Redraw for display
+        drawFavicon(document.getElementById('display16'), 16);
+        drawFavicon(document.getElementById('display32'), 32);
+        drawFavicon(document.getElementById('display180'), 180);
+    </script>
+</body>
+</html>
