@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.api.api_v1.api import api_router
+from pathlib import Path
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -21,6 +23,12 @@ app.add_middleware(
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Mount static files for local uploads (only if using local storage)
+if settings.STORAGE_TYPE == "local":
+    upload_dir = Path(settings.LOCAL_UPLOAD_DIR)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
 
 @app.get("/")
 async def root():

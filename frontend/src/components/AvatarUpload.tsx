@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react'
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons'
 import { apiClient } from '@/services/apiClient'
+import { getImageUrl } from '@/utils/imageUrl'
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string
@@ -144,7 +145,7 @@ export default function AvatarUpload({
   return (
     <VStack spacing={4}>
       <Box position="relative">
-        <Avatar size="2xl" name={username} src={previewUrl} />
+        <Avatar size="2xl" name={username} src={getImageUrl(previewUrl)} />
         {isUploading && (
           <Box
             position="absolute"

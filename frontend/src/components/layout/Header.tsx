@@ -30,6 +30,7 @@ import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getImageUrl } from '@/utils/imageUrl'
 
 export default function Header() {
   const { user, logout } = useAuth()
@@ -132,7 +133,7 @@ export default function Header() {
                     cursor="pointer"
                     minW={0}
                   >
-                    <Avatar size="sm" name={user.username} src={user.avatar_url} />
+                    <Avatar size="sm" name={user.username} src={getImageUrl(user.avatar_url)} />
                   </MenuButton>
                   <MenuList>
                     <MenuItem>

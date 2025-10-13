@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react'
 import { useAuth } from '@/hooks/useAuth'
 import AvatarUpload from './AvatarUpload'
+import { getImageUrl } from '@/utils/imageUrl'
 
 interface User {
   id: string

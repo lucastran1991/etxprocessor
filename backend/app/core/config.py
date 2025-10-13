@@ -17,7 +17,11 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
     
-    # AWS S3
+    # Storage Configuration
+    STORAGE_TYPE: str = "local"  # "local" or "s3"
+    LOCAL_UPLOAD_DIR: str = "uploads"  # Directory for local file storage
+    
+    # AWS S3 (only used when STORAGE_TYPE="s3")
     AWS_ACCESS_KEY_ID: Optional[str] = None
     AWS_SECRET_ACCESS_KEY: Optional[str] = None
     AWS_S3_BUCKET: Optional[str] = None

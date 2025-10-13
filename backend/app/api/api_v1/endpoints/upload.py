@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user
-from app.services.s3_service import S3Service
+from app.services.storage_service import storage_service
 from app.services.user_service import UserService
 from app.models.user import User
 from typing import Dict
@@ -57,27 +57,28 @@ async def upload_avatar(
             detail=f"File too large. Maximum size: {MAX_FILE_SIZE // (1024 * 1024)}MB"
         )
     
-    # Upload to S3 or save locally
-    s3_service = S3Service()
-    avatar_url = s3_service.upload_file(
+    # Upload to storage (local or S3)
+    avatar_path = storage_service.upload_avatar(
         file_content=file_content,
         filename=file.filename,
         content_type=file.content_type
     )
     
-    if not avatar_url:
-        # If S3 is not configured, use a placeholder or local storage
-        # For now, we'll use a gravatar-style URL based on user email
-        import hashlib
-        email_hash = hashlib.md5(current_user.email.lower().encode()).hexdigest()
-        avatar_url = f"https://www.gravatar.com/avatar/{email_hash}?d=identicon&s=200"
+    if not avatar_path:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to upload avatar"
+        )
+    
+    # Get the URL for the avatar
+    avatar_url = storage_service.get_file_url(avatar_path)
     
     # Update user's avatar URL
     user_service = UserService(db)
     
-    # Delete old avatar from S3 if it exists and is not a gravatar
-    if current_user.avatar_url and 'gravatar.com' not in current_user.avatar_url:
-        s3_service.delete_file(current_user.avatar_url)
+    # Delete old avatar if it exists
+    if current_user.avatar_url:
+        storage_service.delete_file(current_user.avatar_url)
     
     # Update user
     from app.schemas.user import UserUpdate
@@ -110,10 +111,8 @@ async def delete_avatar(
             detail="No avatar to delete"
         )
     
-    # Delete from S3 if it's an S3 URL
-    s3_service = S3Service()
-    if 'gravatar.com' not in current_user.avatar_url:
-        s3_service.delete_file(current_user.avatar_url)
+    # Delete from storage
+    storage_service.delete_file(current_user.avatar_url)
     
     # Update user to remove avatar
     user_service = UserService(db)

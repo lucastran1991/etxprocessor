@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.core.database import get_db
 from app.core.auth import get_current_user
-from app.services.s3_service import S3Service
+from app.services.storage_service import storage_service
 from app.services.file_service import FileService
 from app.schemas.file import FileResponse, FileCreate, FolderCreate, FileTreeNode
 from app.models.user import User
@@ -22,7 +22,6 @@ async def upload_files(
 ):
     """Upload one or multiple files"""
     
-    s3_service = S3Service()
     file_service = FileService(db)
     uploaded_files = []
     
@@ -36,7 +35,7 @@ async def upload_files(
             )
         
         # Upload file to storage
-        file_path = s3_service.upload_user_file(
+        file_path = storage_service.upload_file(
             file_content=file_content,
             filename=file.filename or "unnamed",
             content_type=file.content_type or "application/octet-stream",
