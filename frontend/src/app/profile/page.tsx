@@ -7,7 +7,6 @@ import {
   Text, 
   VStack, 
   HStack, 
-  Avatar, 
   Badge, 
   Progress, 
   Button, 
@@ -22,6 +21,7 @@ import {
 } from '@chakra-ui/react'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/layout/Layout'
+import AvatarUpload from '@/components/AvatarUpload'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -30,10 +30,10 @@ export default function Profile() {
   const router = useRouter()
   const toast = useToast()
   const [isEditing, setIsEditing] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined)
   const [formData, setFormData] = useState({
     username: '',
-    email: '',
-    avatar_url: ''
+    email: ''
   })
 
   const cardBg = useColorModeValue('white', 'gray.800')
@@ -46,11 +46,15 @@ export default function Profile() {
     if (user) {
       setFormData({
         username: user.username,
-        email: user.email,
-        avatar_url: user.avatar_url || ''
+        email: user.email
       })
+      setAvatarUrl(user.avatar_url)
     }
   }, [user, isLoading, router])
+
+  const handleAvatarUpdate = (newUrl: string | null) => {
+    setAvatarUrl(newUrl || undefined)
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -127,7 +131,11 @@ export default function Profile() {
           <Card bg={cardBg} borderColor={borderColor} borderWidth="1px">
             <CardBody>
               <VStack spacing={6} align="center">
-                <Avatar size="2xl" name={user.username} src={user.avatar_url} />
+                <AvatarUpload
+                  currentAvatarUrl={avatarUrl}
+                  username={user.username}
+                  onAvatarUpdate={handleAvatarUpdate}
+                />
                 <VStack spacing={2}>
                   <Heading as="h2" size="lg">{user.username}</Heading>
                   <Badge colorScheme={getRoleColor(user.role)} fontSize="md" px={3} py={1}>
@@ -173,17 +181,6 @@ export default function Profile() {
                       value={formData.email}
                       onChange={handleInputChange}
                       isDisabled={!isEditing}
-                    />
-                  </FormControl>
-
-                  <FormControl>
-                    <FormLabel>Avatar URL</FormLabel>
-                    <Input
-                      name="avatar_url"
-                      value={formData.avatar_url}
-                      onChange={handleInputChange}
-                      isDisabled={!isEditing}
-                      placeholder="https://example.com/avatar.jpg"
                     />
                   </FormControl>
 
