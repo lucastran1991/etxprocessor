@@ -113,7 +113,7 @@ export default function FilePreview({ file }: { file: FileNodeLike | null }) {
   }
 
   return (
-    <Card>
+    <Card maxW="100%" maxH="calc(100vh - 100px)" overflowY="auto">
       <CardHeader>
         <VStack align="start" spacing={1}>
           <Heading size="md">Preview</Heading>
@@ -125,7 +125,7 @@ export default function FilePreview({ file }: { file: FileNodeLike | null }) {
         </VStack>
       </CardHeader>
       <Divider />
-      <CardBody>
+      <CardBody overflowX="auto">
         {isImage(file.mime_type, file.name) && url && (
           <Box bg={previewBg} p={2} borderRadius="md">
             <Image src={url} alt={file.name} maxH="480px" objectFit="contain" mx="auto" />
@@ -148,8 +148,8 @@ export default function FilePreview({ file }: { file: FileNodeLike | null }) {
             )}
             {error && <Text color="red.500">{error}</Text>}
             {!loading && csvRows && csvRows.length > 0 && (
-              <Box overflowX="auto">
-                <Table size="sm" variant="striped">
+              <Box overflowX="auto" maxW="100%">
+                <Table size="sm" variant="striped" sx={{ tableLayout: "fixed" }}>
                   <Thead>
                     <Tr>
                       {csvRows[0].map((h, i) => (
@@ -161,7 +161,7 @@ export default function FilePreview({ file }: { file: FileNodeLike | null }) {
                     {csvRows.slice(1, 51).map((row, r) => (
                       <Tr key={r}>
                         {row.map((c, i) => (
-                          <Td key={i}>{c}</Td>
+                          <Td key={i} maxW="200px" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">{c}</Td>
                         ))}
                       </Tr>
                     ))}

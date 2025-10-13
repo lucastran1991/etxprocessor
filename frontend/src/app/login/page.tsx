@@ -1,7 +1,6 @@
 'use client'
 
 import { Box, Container, Heading, Text, VStack, Link } from '@chakra-ui/react'
-import { Link as NextLink } from 'next/link'
 import LoginForm from '@/components/LoginForm'
 import Layout from '@/components/layout/Layout'
 

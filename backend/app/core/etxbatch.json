@@ -1,13 +1,13 @@
 {
-    "HTTPURI": "http://ctxdemo.atomiton.com:8084",
-    "WSURI": "ws://ctxdemo.atomiton.com:8084",
-    "email": "productdemo@atomiton.com",
-    "password": "D3mo@2025",
+    "HTTPURI": "http://ctxdev.atomiton.com:8081",
+    "WSURI": "ws://ctxdev.atomiton.com:8081",
+    "email": "ltran@atomiton.com",
+    "password": "test@123",
     "ServerFileFolder": "/Users/baseerkhan/code/workspace/atomiton/runtime2/sustainability/server/spaces/csv/spnData",
     "RowsPerFile": 25,
     "ImportFilePerRequest": 1,
     "MaxRequests": 2,
-    "API_KEY": "AQICAHjMXgtY9KjKaPbxho/q+IqAU3EoBqN4emVlah0OvjOOTgERwjX2mHIi3NAcoXgSHZNnAAABFDCCARAGCSqGSIb3DQEHBqCCAQEwgf4CAQAwgfgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMlbXCKtXzqwqKB7U2AgEQgIHKK84GyIGu13n6SFNOGZiV+m49MrLYzP0pRKn/q2nlrt48GppMbV7dXK2pQPB2Yc6o/3tGprX6cQodfd4tw8J7k5bx33lRzHQF713Leorrrvxe+GweBheYxinABcNIyvcz1r3R0nixOn6NyNdSnyulA1LwJuPLMaReolosJCzU50uaUh1EClj+a1vpU/a7gzUdvLsa2mLdDCTVz1/zO5bPWnUkmAqa10LnsfxgOhhixfzPYocWPzMeutw/2b3cWo8x6wq+bmlXFwky4g==",
+    "API_KEY": "AQICAHjMXgtY9KjKaPbxho/q+IqAU3EoBqN4emVlah0OvjOOTgHD+TQ7l6FsugJq+kEzL7vBAAABBzCCAQMGCSqGSIb3DQEHBqCB9TCB8gIBADCB7AYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAwO0s80uiQtPazgVNUCARCAgb63dQkvRYI4qUeEaoQA6eFGt6eMyLcr+PyuqvwpN+X31PO0BI1mPnqOIjIUlQvs13H772keviqX6uMqCkyc41uvFr6hz+DD4YJMwEvO60mUY4HcVEA+xjRQhWx12W/o3C4GdXvInNsqzj3H7Sf+kNPfWr30sw/zC19f42Pt2UcPNCUb68wYA1Xggzef6EBt9JXwBQAP8SXW/CVGG7D/VB7BjKAyQcOLntX0mlGV+h1pKrAjrCJIZqw7KlDOC/35",
     "API_VERSION": "ctx/v1",
     "GATE_WAY": "ws"
 }

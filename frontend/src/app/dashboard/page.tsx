@@ -219,7 +219,7 @@ export default function Dashboard() {
             {usersList.length === 0 ? (
                   <Text color="gray.600">No users to display.</Text>
             ) : (
-              <Box bg={listBg} borderRadius="md">
+              <Box borderRadius="md">
                 <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={4}>
                   {usersList.map((u) => (
                     <Card key={u.id} borderColor={borderColor} borderWidth="1px">

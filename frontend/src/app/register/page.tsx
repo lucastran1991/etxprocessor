@@ -1,7 +1,6 @@
 'use client'
 
 import { Box, Container, Heading, Text, VStack, Link } from '@chakra-ui/react'
-import { Link as NextLink } from 'next/link'
 import RegisterForm from '@/components/RegisterForm'
 import Layout from '@/components/layout/Layout'
 
@@ -23,7 +22,7 @@ export default function RegisterPage() {
 
           <Text>
             Already have an account?{' '}
-            <Link as={NextLink} href="/login" color="blue.500">
+            <Link as={require('next/link').default} href="/login" color="blue.500">
               Login here
             </Link>
           </Text>

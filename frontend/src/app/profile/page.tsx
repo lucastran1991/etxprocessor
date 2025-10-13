@@ -207,7 +207,10 @@ export default function Profile() {
                 <VStack spacing={2} align="flex-start" width="100%" maxW="md">
                   <Text><strong>Account Status:</strong> {user.is_active ? 'Active' : 'Inactive'}</Text>
                   <Text><strong>Email Verified:</strong> {user.is_verified ? 'Yes' : 'No'}</Text>
-                  <Text><strong>Member Since:</strong> {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}</Text>
+                  {/* created_at is not in client User type; hide if undefined */}
+                  { (user as any).created_at && (
+                    <Text><strong>Member Since:</strong> {new Date((user as any).created_at).toLocaleDateString()}</Text>
+                  )}
                 </VStack>
               </VStack>
             </CardBody>
