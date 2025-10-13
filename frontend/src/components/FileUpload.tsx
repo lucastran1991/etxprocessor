@@ -62,10 +62,19 @@ export default function FileUpload({ onUploadComplete, currentFolder = '/' }: Fi
 
     try {
       const formData = new FormData()
+      const relativePaths: string[] = []
       selectedFiles.forEach((file) => {
         formData.append('files', file)
+        // webkitRelativePath preserves folder hierarchy when folder upload is used
+        // For regular file selection, this may be empty and that's fine
+        // @ts-ignore
+        const rp = (file as any).webkitRelativePath || ''
+        relativePaths.push(rp)
       })
       formData.append('folder_path', currentFolder)
+      try {
+        formData.append('relative_paths', JSON.stringify(relativePaths))
+      } catch {}
 
       await apiClient.post('/files/upload', formData, {
         headers: {

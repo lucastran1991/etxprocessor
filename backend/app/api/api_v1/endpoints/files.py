@@ -17,6 +17,7 @@ MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB per file
 async def upload_files(
     files: List[UploadFile] = File(...),
     folder_path: str = Form("/"),
+    relative_paths: Optional[str] = Form(None),  # JSON stringified array of relative paths matching files order
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -25,7 +26,18 @@ async def upload_files(
     file_service = FileService(db)
     uploaded_files = []
     
-    for file in files:
+    # Parse optional relative paths from the browser (webkitRelativePath)
+    rel_paths_list: Optional[List[str]] = None
+    if relative_paths:
+        try:
+            import json
+            parsed = json.loads(relative_paths)
+            if isinstance(parsed, list):
+                rel_paths_list = [str(p) for p in parsed]
+        except Exception:
+            rel_paths_list = None
+
+    for index, file in enumerate(files):
         # Validate file size
         file_content = await file.read()
         if len(file_content) > MAX_FILE_SIZE:
@@ -34,6 +46,21 @@ async def upload_files(
                 detail=f"File {file.filename} is too large. Maximum size: 100MB"
             )
         
+        # Determine target folder path (preserve client hierarchy if provided)
+        target_folder = folder_path
+        if rel_paths_list and index < len(rel_paths_list):
+            rp = rel_paths_list[index]
+            # Drop the filename from the relative path and join with base folder_path
+            rp_dir = os.path.dirname(rp).replace('\\', '/')
+            if rp_dir and rp_dir != '.':
+                # Normalize to "/parent/..."
+                rp_dir_norm = '/' + rp_dir.strip('/')
+                base_norm = '/' + (folder_path or '/').strip('/') if folder_path != '/' else '/'
+                target_folder = base_norm if rp_dir_norm == '/' else (base_norm.rstrip('/') + rp_dir_norm)
+
+        # Ensure folder hierarchy records exist in DB
+        FileService(db).ensure_folder_hierarchy(str(current_user.id), target_folder)
+
         # Upload file to storage
         file_path = storage_service.upload_file(
             file_content=file_content,
@@ -55,7 +82,7 @@ async def upload_files(
             file_path=file_path,
             file_size=len(file_content),
             mime_type=file.content_type,
-            folder_path=folder_path,
+            folder_path=target_folder or "/",
             user_id=str(current_user.id),
             is_folder=False
         )

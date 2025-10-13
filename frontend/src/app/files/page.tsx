@@ -22,6 +22,7 @@ import Layout from '@/components/layout/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import FileExplorer from '@/components/FileExplorer'
+import FilePreview from '@/components/FilePreview'
 import FileUpload from '@/components/FileUpload'
 import { apiClient } from '@/services/apiClient'
 
@@ -33,6 +34,7 @@ export default function FilesPage() {
     file_count: number
   } | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [selectedFile, setSelectedFile] = useState<any | null>(null)
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -64,6 +66,7 @@ export default function FilesPage() {
 
   const handleUploadComplete = () => {
     setRefreshKey((prev) => prev + 1)
+    // if files changed, clear preview if deleted; keep selection otherwise
   }
 
   if (isLoading || !user) {
@@ -114,6 +117,7 @@ export default function FilesPage() {
                   <FileExplorer
                     key={refreshKey}
                     onRefresh={handleUploadComplete}
+                    onFileSelect={(f) => setSelectedFile(f)}
                   />
                 </CardBody>
               </Card>
@@ -130,6 +134,10 @@ export default function FilesPage() {
                   <FileUpload onUploadComplete={handleUploadComplete} />
                 </CardBody>
               </Card>
+
+              <Box mt={6}>
+                <FilePreview file={selectedFile} />
+              </Box>
 
               <Card mt={6}>
                 <CardHeader>

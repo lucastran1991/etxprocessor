@@ -4,6 +4,7 @@ from typing import List, Optional
 from app.models.file import File
 from app.schemas.file import FileCreate, FolderCreate, FileTreeNode
 import uuid
+import os
 
 class FileService:
     def __init__(self, db: Session):
@@ -65,6 +66,45 @@ class FileService:
                 File.user_id == user_id
             )
         ).first()
+
+    def ensure_folder_hierarchy(self, user_id: str, folder_path: str) -> None:
+        """Ensure that all folders in the given folder_path exist for the user."""
+        if not folder_path or folder_path == '/':
+            return
+
+        # Normalize path (no trailing slash, always starts with '/')
+        normalized = '/' + folder_path.strip('/')
+        parts = [p for p in normalized.split('/') if p]
+
+        current_path = ''
+        for idx, part in enumerate(parts):
+            current_path = f"{current_path}/{part}" if current_path else f"/{part}"
+
+            # Does this folder exist?
+            existing = self.db.query(File).filter(
+                and_(
+                    File.user_id == user_id,
+                    File.is_folder == True,
+                    File.folder_path == current_path
+                )
+            ).first()
+
+            if not existing:
+                folder = File(
+                    id=uuid.uuid4(),
+                    user_id=user_id,
+                    filename=part,
+                    original_filename=part,
+                    file_path=current_path,
+                    file_size=0,
+                    mime_type=None,
+                    folder_path=current_path,
+                    is_folder=True,
+                    parent_id=None
+                )
+                self.db.add(folder)
+                self.db.commit()
+                self.db.refresh(folder)
 
     def delete_file(self, file_id: str, user_id: str) -> bool:
         """Delete a file or folder (and all its contents)"""
@@ -159,7 +199,9 @@ class FileService:
                 type="file",
                 size=file.file_size,
                 mime_type=file.mime_type,
-                path=file.folder_path,
+                # Use the stored file path so the frontend can resolve a direct URL
+                # For local storage this is a path under uploads/, for S3 this is the key
+                path=file.file_path,
                 uploaded_at=file.uploaded_at,
                 children=None
             )

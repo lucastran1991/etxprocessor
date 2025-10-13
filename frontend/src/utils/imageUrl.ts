@@ -4,6 +4,11 @@
 export function getImageUrl(url: string | undefined | null): string | undefined {
   if (!url) return undefined
 
+  // Pass-through data/blobs (e.g., local previews from FileReader / ObjectURL)
+  if (url.startsWith('data:') || url.startsWith('blob:')) {
+    return url
+  }
+
   // If it's already a full URL (http/https), return as is
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url

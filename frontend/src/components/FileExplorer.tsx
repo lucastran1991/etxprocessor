@@ -46,11 +46,13 @@ function FileTreeItem({
   level = 0,
   onDelete,
   onSelect,
+  onCreateFolder,
 }: {
   node: FileNode
   level?: number
   onDelete: (id: string) => void
   onSelect?: (file: FileNode) => void
+  onCreateFolder: (parentPath: string) => void
 }) {
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: level === 0 })
   const hasChildren = node.children && node.children.length > 0
@@ -151,6 +153,16 @@ function FileTreeItem({
             onClick={(e) => e.stopPropagation()}
           />
           <MenuList>
+            {isFolder && (
+              <MenuItem
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onCreateFolder(node.path)
+                }}
+              >
+                New Subfolder
+              </MenuItem>
+            )}
             <MenuItem
               icon={<DeleteIcon />}
               onClick={(e) => {
@@ -176,6 +188,7 @@ function FileTreeItem({
                 level={level + 1}
                 onDelete={onDelete}
                 onSelect={onSelect}
+                onCreateFolder={onCreateFolder}
               />
             ))}
           </Box>
@@ -188,6 +201,7 @@ function FileTreeItem({
 export default function FileExplorer({ onFileSelect, onRefresh }: FileExplorerProps) {
   const [fileTree, setFileTree] = useState<FileNode[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false)
   const toast = useToast()
 
   const loadFileTree = async () => {
@@ -212,6 +226,78 @@ export default function FileExplorer({ onFileSelect, onRefresh }: FileExplorerPr
   useEffect(() => {
     loadFileTree()
   }, [])
+
+  const handleCreateFolder = async (parentPath: string) => {
+    const name = window.prompt('New folder name:')
+    if (!name) return
+    try {
+      await apiClient.post('/files/folder', { folder_name: name, parent_path: parentPath || '/' })
+      toast({
+        title: 'Folder created',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      })
+      await loadFileTree()
+      if (onRefresh) onRefresh()
+    } catch (error: any) {
+      console.error('Failed to create folder:', error)
+      toast({
+        title: 'Error',
+        description: error?.response?.data?.detail || 'Failed to create folder',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
+  const handleDeleteAll = async () => {
+    if (fileTree.length === 0) return
+
+    const confirmed = window.confirm('This will permanently delete ALL your files and folders. Continue?')
+    if (!confirmed) return
+
+    setIsBulkDeleting(true)
+    try {
+      // Delete all top-level nodes; folders delete recursively on backend
+      const ids = fileTree.map((n) => n.id)
+      const results = await Promise.allSettled(ids.map((id) => apiClient.delete(`/files/${id}`)))
+      const rejected = results.filter((r) => r.status === 'rejected')
+
+      if (rejected.length > 0) {
+        toast({
+          title: 'Partial delete',
+          description: `Some items could not be deleted (${rejected.length}).`,
+          status: 'warning',
+          duration: 4000,
+          isClosable: true,
+        })
+      } else {
+        toast({
+          title: 'All files deleted',
+          description: 'Your files and folders were removed successfully.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+
+      await loadFileTree()
+      if (onRefresh) onRefresh()
+    } catch (error: any) {
+      console.error('Failed to delete all files:', error)
+      toast({
+        title: 'Error',
+        description: error?.response?.data?.detail || 'Failed to delete all files',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      setIsBulkDeleting(false)
+    }
+  }
 
   const handleDelete = async (fileId: string) => {
     try {
@@ -256,13 +342,36 @@ export default function FileExplorer({ onFileSelect, onRefresh }: FileExplorerPr
   }
 
   return (
-    <VStack align="stretch" spacing={0}>
+    <VStack align="stretch" spacing={2}>
+      <HStack justify="space-between" px={2} py={1}>
+        <HStack>
+          <IconButton
+            aria-label="New folder"
+            icon={<Icon as={FaFolder} />}
+            colorScheme="blue"
+            variant="outline"
+            size="sm"
+            onClick={() => handleCreateFolder('/')}
+            isDisabled={isLoading}
+          />
+        </HStack>
+        <IconButton
+          aria-label="Delete all"
+          icon={<DeleteIcon />}
+          colorScheme="red"
+          variant="outline"
+          size="sm"
+          onClick={handleDeleteAll}
+          isDisabled={isLoading || isBulkDeleting || fileTree.length === 0}
+        />
+      </HStack>
       {fileTree.map((node) => (
         <FileTreeItem
           key={node.id}
           node={node}
           onDelete={handleDelete}
           onSelect={onFileSelect}
+          onCreateFolder={handleCreateFolder}
         />
       ))}
     </VStack>
