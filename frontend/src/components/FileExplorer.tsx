@@ -393,7 +393,7 @@ export default function FileExplorer({ onFileSelect, onRefresh, readOnly = false
           <IconButton
             aria-label="New folder"
             icon={<Icon as={FaFolder} />}
-            colorScheme="blue"
+            colorScheme="brand"
             variant="outline"
             size="sm"
             onClick={() => handleCreateFolder('/')}

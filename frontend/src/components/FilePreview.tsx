@@ -120,7 +120,7 @@ export default function FilePreview({ file }: { file: FileNodeLike | null }) {
           <HStack spacing={2}>
             <Text fontWeight="semibold">{file.name}</Text>
             {file.mime_type && <Badge>{file.mime_type}</Badge>}
-            {file.size ? <Badge colorScheme="purple">{formatBytes(file.size)}</Badge> : null}
+            {file.size ? <Badge colorScheme="brand">{formatBytes(file.size)}</Badge> : null}
           </HStack>
         </VStack>
       </CardHeader>

@@ -95,7 +95,7 @@ export default function LoginForm({ showRegisterLink = true }: LoginFormProps) {
 
           <Button
             type="submit"
-            colorScheme="blue"
+            colorScheme="brand"
             size="lg"
             w="full"
             isLoading={isLoading}

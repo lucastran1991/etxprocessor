@@ -80,7 +80,7 @@ export default function ProcessingPage() {
                         <option key={a} value={a}>{a}</option>
                       ))}
                     </Select>
-                    <Button colorScheme="blue" onClick={onExecute} isDisabled={!selectedFile}>Execute</Button>
+                    <Button colorScheme="brand" onClick={onExecute} isDisabled={!selectedFile}>Execute</Button>
                     {selectedFile ? (
                       <VStack align="start" spacing={1} fontSize="sm">
                         <HStack><Badge>File</Badge><Text>{selectedFile.name}</Text></HStack>

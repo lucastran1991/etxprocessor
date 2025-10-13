@@ -89,7 +89,7 @@ export default function UserProfile({ user: initialUser }: UserProfileProps) {
             
             <Progress
               value={getExpProgress(initialUser.exp, initialUser.level)}
-              colorScheme="blue"
+              colorScheme="brand"
               size="lg"
               w="full"
               borderRadius="md"

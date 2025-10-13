@@ -168,7 +168,7 @@ export default function FileUpload({ onUploadComplete, currentFolder = '/' }: Fi
         
         <Button
           leftIcon={<AttachmentIcon />}
-          colorScheme="blue"
+          colorScheme="brand"
           size="sm"
           onClick={() => fileInputRef.current?.click()}
           isDisabled={isUploading}
@@ -178,7 +178,7 @@ export default function FileUpload({ onUploadComplete, currentFolder = '/' }: Fi
         
         <Button
           leftIcon={<Icon as={FaFolder} />}
-          colorScheme="blue"
+          colorScheme="brand"
           variant="outline"
           size="sm"
           onClick={() => folderInputRef.current?.click()}
@@ -208,7 +208,7 @@ export default function FileUpload({ onUploadComplete, currentFolder = '/' }: Fi
                       icon={<CloseIcon />}
                       size="xs"
                       variant="ghost"
-                      colorScheme="red"
+              colorScheme="red"
                       onClick={() => removeFile(index)}
                       isDisabled={isUploading}
                     />
@@ -241,7 +241,7 @@ export default function FileUpload({ onUploadComplete, currentFolder = '/' }: Fi
 
           {isUploading && (
             <Box mt={2}>
-              <Progress value={uploadProgress} size="sm" colorScheme="green" borderRadius="md" />
+              <Progress value={uploadProgress} size="sm" colorScheme="brand" borderRadius="md" />
               <Text fontSize="xs" color="gray.500" textAlign="center" mt={1}>
                 {uploadProgress}%
               </Text>

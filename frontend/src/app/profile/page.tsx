@@ -155,7 +155,7 @@ export default function Profile() {
                   <Progress 
                     value={getExpProgress(user.exp, user.level)} 
                     size="lg" 
-                    colorScheme="green" 
+                    colorScheme="brand" 
                     width="100%" 
                   />
                 </VStack>
@@ -187,7 +187,7 @@ export default function Profile() {
                   <HStack spacing={4} width="100%">
                     {isEditing ? (
                       <>
-                        <Button colorScheme="green" onClick={handleSave} flex="1">
+                        <Button colorScheme="brand" onClick={handleSave} flex="1">
                           Save Changes
                         </Button>
                         <Button variant="outline" onClick={() => setIsEditing(false)} flex="1">
@@ -195,7 +195,7 @@ export default function Profile() {
                         </Button>
                       </>
                     ) : (
-                      <Button colorScheme="blue" onClick={() => setIsEditing(true)} width="full">
+                      <Button colorScheme="brand" onClick={() => setIsEditing(true)} width="full">
                         Edit Profile
                       </Button>
                     )}

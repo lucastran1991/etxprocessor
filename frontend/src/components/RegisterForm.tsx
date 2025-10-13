@@ -139,7 +139,7 @@ export default function RegisterForm() {
 
           <Button
             type="submit"
-            colorScheme="blue"
+            colorScheme="brand"
             size="lg"
             w="full"
             isLoading={isLoading}

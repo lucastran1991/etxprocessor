@@ -180,7 +180,7 @@ export default function AvatarUpload({
       <HStack spacing={2}>
         <Button
           leftIcon={<EditIcon />}
-          colorScheme="blue"
+          colorScheme="brand"
           size="sm"
           onClick={handleButtonClick}
           isDisabled={isUploading}
