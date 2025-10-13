@@ -44,19 +44,19 @@ export default function Header() {
   }
 
   const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <Link href={href} passHref>
-      <ChakraLink
-        px={2}
-        py={1}
-        rounded="md"
-        _hover={{
-          textDecoration: 'none',
-          bg: useColorModeValue('gray.200', 'gray.700'),
-        }}
-      >
-        {children}
-      </ChakraLink>
-    </Link>
+    <ChakraLink
+      as={Link}
+      href={href}
+      px={2}
+      py={1}
+      rounded="md"
+      _hover={{
+        textDecoration: 'none',
+        bg: useColorModeValue('gray.200', 'gray.700'),
+      }}
+    >
+      {children}
+    </ChakraLink>
   )
 
   const MobileNav = () => (
@@ -107,13 +107,11 @@ export default function Header() {
       >
         {/* Logo */}
         <Flex alignItems="center">
-          <Link href="/" passHref>
-            <ChakraLink _hover={{ textDecoration: 'none' }}>
-              <Heading as="h1" size="md" color="brand.500">
-                ETX Processor
-              </Heading>
-            </ChakraLink>
-          </Link>
+          <ChakraLink as={Link} href="/" _hover={{ textDecoration: 'none' }}>
+            <Heading as="h1" size="md" color="brand.500">
+              ETX Processor
+            </Heading>
+          </ChakraLink>
         </Flex>
 
         {/* Desktop Navigation */}

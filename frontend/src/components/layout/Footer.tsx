@@ -22,31 +22,21 @@ export default function Footer() {
       <Container as={Stack} maxW="7xl" py={10}>
         <VStack spacing={8}>
           <HStack spacing={8} wrap="wrap" justify="center">
-            <Link href="/" passHref>
-              <ChakraLink _hover={{ textDecoration: 'underline' }}>
-                Home
-              </ChakraLink>
-            </Link>
-            <Link href="/about" passHref>
-              <ChakraLink _hover={{ textDecoration: 'underline' }}>
-                About
-              </ChakraLink>
-            </Link>
-            <Link href="/contact" passHref>
-              <ChakraLink _hover={{ textDecoration: 'underline' }}>
-                Contact
-              </ChakraLink>
-            </Link>
-            <Link href="/privacy" passHref>
-              <ChakraLink _hover={{ textDecoration: 'underline' }}>
-                Privacy Policy
-              </ChakraLink>
-            </Link>
-            <Link href="/terms" passHref>
-              <ChakraLink _hover={{ textDecoration: 'underline' }}>
-                Terms of Service
-              </ChakraLink>
-            </Link>
+            <ChakraLink as={Link} href="/" _hover={{ textDecoration: 'underline' }}>
+              Home
+            </ChakraLink>
+            <ChakraLink as={Link} href="/about" _hover={{ textDecoration: 'underline' }}>
+              About
+            </ChakraLink>
+            <ChakraLink as={Link} href="/contact" _hover={{ textDecoration: 'underline' }}>
+              Contact
+            </ChakraLink>
+            <ChakraLink as={Link} href="/privacy" _hover={{ textDecoration: 'underline' }}>
+              Privacy Policy
+            </ChakraLink>
+            <ChakraLink as={Link} href="/terms" _hover={{ textDecoration: 'underline' }}>
+              Terms of Service
+            </ChakraLink>
           </HStack>
           
           <Divider />

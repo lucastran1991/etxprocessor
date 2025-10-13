@@ -18,15 +18,7 @@ export default function LoginPage() {
               Sign in to your account
             </Text>
           </Box>
-
           <LoginForm />
-
-          <Text>
-            Don't have an account?{' '}
-            <Link as={NextLink} href="/register" color="blue.500">
-              Register here
-            </Link>
-          </Text>
         </VStack>
       </Container>
     </Layout>
