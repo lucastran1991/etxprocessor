@@ -1,0 +1,214 @@
+'use client'
+
+import { useRef, useState } from 'react'
+import {
+  Box,
+  Button,
+  VStack,
+  HStack,
+  Text,
+  Progress,
+  Icon,
+  useToast,
+  List,
+  ListItem,
+  IconButton,
+} from '@chakra-ui/react'
+import { AttachmentIcon, CloseIcon } from '@chakra-ui/icons'
+import { FaFile, FaFolder } from 'react-icons/fa'
+import { apiClient } from '@/services/apiClient'
+
+interface FileUploadProps {
+  onUploadComplete?: () => void
+  currentFolder?: string
+}
+
+export default function FileUpload({ onUploadComplete, currentFolder = '/' }: FileUploadProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const folderInputRef = useRef<HTMLInputElement>(null)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const toast = useToast()
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    setSelectedFiles((prev) => [...prev, ...files])
+  }
+
+  const handleFolderSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    setSelectedFiles((prev) => [...prev, ...files])
+  }
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleUpload = async () => {
+    if (selectedFiles.length === 0) {
+      toast({
+        title: 'No files selected',
+        description: 'Please select files to upload',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      })
+      return
+    }
+
+    setIsUploading(true)
+    setUploadProgress(0)
+
+    try {
+      const formData = new FormData()
+      selectedFiles.forEach((file) => {
+        formData.append('files', file)
+      })
+      formData.append('folder_path', currentFolder)
+
+      await apiClient.post('/files/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setUploadProgress(progress)
+          }
+        },
+      })
+
+      toast({
+        title: 'Success',
+        description: `${selectedFiles.length} file(s) uploaded successfully`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+
+      setSelectedFiles([])
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      if (folderInputRef.current) folderInputRef.current.value = ''
+      if (onUploadComplete) onUploadComplete()
+    } catch (error: any) {
+      console.error('Upload error:', error)
+      toast({
+        title: 'Upload failed',
+        description: error.response?.data?.detail || 'Failed to upload files',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    } finally {
+      setIsUploading(false)
+      setUploadProgress(0)
+    }
+  }
+
+  const formatFileSize = (bytes: number) => {
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    if (bytes === 0) return '0 B'
+    const i = Math.floor(Math.log(bytes) / Math.log(1024))
+    return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`
+  }
+
+  return (
+    <VStack spacing={4} align="stretch">
+      <HStack spacing={2}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          style={{ display: 'none' }}
+          onChange={handleFileSelect}
+        />
+        <input
+          ref={folderInputRef}
+          type="file"
+          /* @ts-ignore */
+          webkitdirectory=""
+          directory=""
+          multiple
+          style={{ display: 'none' }}
+          onChange={handleFolderSelect}
+        />
+        
+        <Button
+          leftIcon={<AttachmentIcon />}
+          colorScheme="blue"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          isDisabled={isUploading}
+        >
+          Select Files
+        </Button>
+        
+        <Button
+          leftIcon={<Icon as={FaFolder} />}
+          colorScheme="blue"
+          variant="outline"
+          size="sm"
+          onClick={() => folderInputRef.current?.click()}
+          isDisabled={isUploading}
+        >
+          Select Folder
+        </Button>
+      </HStack>
+
+      {selectedFiles.length > 0 && (
+        <Box>
+          <Text fontSize="sm" fontWeight="bold" mb={2}>
+            Selected Files ({selectedFiles.length})
+          </Text>
+          <List spacing={1} maxH="200px" overflowY="auto" p={2} bg="gray.50" borderRadius="md">
+            {selectedFiles.map((file, index) => (
+              <ListItem key={index}>
+                <HStack justify="space-between" fontSize="xs">
+                  <HStack flex={1} overflow="hidden">
+                    <Icon as={FaFile} color="blue.500" />
+                    <Text noOfLines={1}>{file.name}</Text>
+                  </HStack>
+                  <HStack spacing={2}>
+                    <Text color="gray.500">{formatFileSize(file.size)}</Text>
+                    <IconButton
+                      aria-label="Remove file"
+                      icon={<CloseIcon />}
+                      size="xs"
+                      variant="ghost"
+                      colorScheme="red"
+                      onClick={() => removeFile(index)}
+                      isDisabled={isUploading}
+                    />
+                  </HStack>
+                </HStack>
+              </ListItem>
+            ))}
+          </List>
+
+          <Button
+            colorScheme="green"
+            size="sm"
+            onClick={handleUpload}
+            isLoading={isUploading}
+            loadingText="Uploading..."
+            mt={2}
+            w="full"
+          >
+            Upload {selectedFiles.length} File(s)
+          </Button>
+
+          {isUploading && (
+            <Box mt={2}>
+              <Progress value={uploadProgress} size="sm" colorScheme="green" borderRadius="md" />
+              <Text fontSize="xs" color="gray.500" textAlign="center" mt={1}>
+                {uploadProgress}%
+              </Text>
+            </Box>
+          )}
+        </Box>
+      )}
+    </VStack>
+  )
+}
+

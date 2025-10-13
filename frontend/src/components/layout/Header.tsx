@@ -71,6 +71,7 @@ export default function Header() {
             {user ? (
               <>
                 <NavLink href="/dashboard">Dashboard</NavLink>
+                <NavLink href="/files">Files</NavLink>
                 <NavLink href="/profile">Profile</NavLink>
                 <Button onClick={handleLogout} colorScheme="red" variant="outline">
                   Logout
@@ -121,6 +122,7 @@ export default function Header() {
             {user ? (
               <>
                 <NavLink href="/dashboard">Dashboard</NavLink>
+                <NavLink href="/files">Files</NavLink>
                 <NavLink href="/profile">Profile</NavLink>
                 <Menu>
                   <MenuButton

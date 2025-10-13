@@ -15,7 +15,7 @@ class S3Service:
                 region_name=settings.AWS_REGION
             )
     
-    def upload_file(self, file_content: bytes, filename: str, content_type: str) -> Optional[str]:
+    def upload_file(self, file_content: bytes, filename: str, content_type: str, folder: str = "avatars") -> Optional[str]:
         """
         Upload a file to S3 and return the URL
         """
@@ -26,7 +26,7 @@ class S3Service:
         try:
             # Generate unique filename
             file_extension = filename.split('.')[-1] if '.' in filename else 'jpg'
-            unique_filename = f"avatars/{uuid.uuid4()}.{file_extension}"
+            unique_filename = f"{folder}/{uuid.uuid4()}.{file_extension}"
             
             # Upload to S3
             self.s3_client.put_object(
@@ -40,6 +40,50 @@ class S3Service:
             # Return the URL
             url = f"https://{settings.AWS_S3_BUCKET}.s3.{settings.AWS_REGION}.amazonaws.com/{unique_filename}"
             return url
+            
+        except ClientError as e:
+            print(f"Error uploading to S3: {e}")
+            return None
+    
+    def upload_user_file(self, file_content: bytes, filename: str, content_type: str, user_id: str) -> Optional[str]:
+        """
+        Upload a user file to S3 and return the storage path
+        """
+        if not self.s3_client or not settings.AWS_S3_BUCKET:
+            # S3 not configured, save locally (for demo)
+            import os
+            from pathlib import Path
+            
+            # Create uploads directory
+            upload_dir = Path("uploads") / user_id
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Generate unique filename
+            file_extension = filename.split('.')[-1] if '.' in filename else 'bin'
+            unique_filename = f"{uuid.uuid4()}.{file_extension}"
+            file_path = upload_dir / unique_filename
+            
+            # Save file locally
+            with open(file_path, 'wb') as f:
+                f.write(file_content)
+            
+            return str(file_path)
+        
+        try:
+            # Generate unique filename with user folder
+            file_extension = filename.split('.')[-1] if '.' in filename else 'bin'
+            unique_filename = f"files/{user_id}/{uuid.uuid4()}.{file_extension}"
+            
+            # Upload to S3
+            self.s3_client.put_object(
+                Bucket=settings.AWS_S3_BUCKET,
+                Key=unique_filename,
+                Body=file_content,
+                ContentType=content_type
+            )
+            
+            # Return the S3 path
+            return unique_filename
             
         except ClientError as e:
             print(f"Error uploading to S3: {e}")
