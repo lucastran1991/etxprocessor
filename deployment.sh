@@ -38,7 +38,8 @@ deploy_backend() {
     if [[ $FORCE -eq 1 ]]; then kill_port 8000; sleep 1; fi
   fi
   if check_port 8000; then echo "port 8000 in use; skipping"; else
-    nohup ./venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4 > "$ROOT_DIR/backend.log" 2>&1 &
+    # Unified log with [BE] tag
+    nohup ./venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4 2>&1 | sed -e 's/^/[BE] /' >> "$ROOT_DIR/system.log" &
     echo $! > "$ROOT_DIR/backend.pid"
   fi
 }
@@ -52,7 +53,8 @@ deploy_frontend() {
     if [[ $FORCE -eq 1 ]]; then kill_port 3000; sleep 1; fi
   fi
   if check_port 3000; then echo "port 3000 in use; skipping"; else
-    nohup npm run start -- -p 3000 > "$ROOT_DIR/frontend.log" 2>&1 &
+    # Unified log with [FE] tag
+    nohup npm run start -- -p 3000 2>&1 | sed -e 's/^/[FE] /' >> "$ROOT_DIR/system.log" &
     echo $! > "$ROOT_DIR/frontend.pid"
   fi
 }

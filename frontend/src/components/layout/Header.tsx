@@ -56,14 +56,13 @@ export default function Header() {
       <ChakraLink
         as={Link}
         href={href}
-        px={2}
-        py={1}
-        rounded="md"
+        px={4}
+        py={2}
+        rounded="lg"
         color={isActive ? activeColor : undefined}
         bg={isActive ? activeBg : 'transparent'}
-        borderBottom={isActive ? '2px solid' : '2px solid transparent'}
-        borderColor={isActive ? 'brand.500' : 'transparent'}
-        _hover={{ textDecoration: 'none', bg: hoverBg }}
+        fontWeight={isActive ? 'semibold' : 'normal'}
+        _hover={{ textDecoration: 'none', bg: hoverBg, rounded: 'lg' }}
       >
         {children}
       </ChakraLink>

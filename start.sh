@@ -50,7 +50,8 @@ start_backend() {
         alembic upgrade head
         
         echo -e "${BLUE}🔧 Starting FastAPI server...${NC}"
-        nohup python -m uvicorn main:app --host 127.0.0.1 --port 8000 > ../backend.log 2>&1 &
+        # Write to unified system.log with [BE] tag
+        nohup python -m uvicorn main:app --host 127.0.0.1 --port 8000 2>&1 | sed -e 's/^/[BE] /' >> ../system.log &
         echo $! > ../backend.pid
         
         cd ..
@@ -76,7 +77,8 @@ start_frontend() {
         npm install
         
         echo -e "${BLUE}🔧 Starting Next.js development server...${NC}"
-        nohup npm run dev > ../frontend.log 2>&1 &
+        # Write to unified system.log with [FE] tag
+        nohup npm run dev 2>&1 | sed -e 's/^/[FE] /' >> ../system.log &
         echo $! > ../frontend.pid
         
         cd ..
@@ -140,8 +142,7 @@ main() {
     echo -e "${BLUE}API Docs:     http://127.0.0.1:8000/docs${NC}"
     echo ""
     echo -e "${YELLOW}📝 Logs:${NC}"
-    echo -e "${YELLOW}  Backend:  tail -f backend.log${NC}"
-    echo -e "${YELLOW}  Frontend: tail -f frontend.log${NC}"
+    echo -e "${YELLOW}  Unified:  tail -f system.log${NC}"
     echo ""
     echo -e "${YELLOW}🛑 To stop: ./stop.sh${NC}"
     echo -e "${YELLOW}🔄 To restart: ./restart.sh${NC}"

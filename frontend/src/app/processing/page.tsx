@@ -36,7 +36,7 @@ export default function ProcessingPage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null)
-  const [action, setAction] = useState<string[]>(['Syncing', 'Reload', 'Publish BAR Data'])
+  const [action, setAction] = useState<string>('Select Action')
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -44,11 +44,45 @@ export default function ProcessingPage() {
     }
   }, [user, isLoading, router])
 
-  const onExecute = () => {
-    if (!selectedFile) return
-    // For now, just notify with file info. Real execution can call an API.
-    alert(`Action: ${action}\nFile: ${selectedFile.name}\nSize: ${selectedFile.size ?? 0} bytes\nUploaded: ${new Date(selectedFile.uploaded_at).toLocaleString()}`)
-  }
+  const handleProcessing = async () => {
+    if (!selectedFile || !action) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('file_path', selectedFile.path);
+      
+      let endpoint = '';
+      switch (action) {
+        case 'Import Organizations':
+          endpoint = '/api/processing/createorg';
+          break;
+        case 'Import Emission Sources':
+          endpoint = '/api/processing/ingestes';
+          break;
+        case 'Load BAR Data':
+          endpoint = '/api/processing/ingestbar';
+          break;
+        default:
+          return;
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Processing failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      alert(`Processing completed successfully!\n${result.message || ''}`);
+
+    } catch (error) {
+      console.error('Processing error:', error);
+      alert(`Processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
 
   return (
     <Layout>
@@ -75,12 +109,12 @@ export default function ProcessingPage() {
                 <Divider />
                 <CardBody>
                   <VStack align="stretch" spacing={4}>
-                    <Select value={action[0]} onChange={(e) => setAction([e.target.value])}>
-                      {action.map((a) => (
+                    <Select value={action} onChange={(e) => setAction(e.target.value)}>
+                      {['Import Organizations', 'Import Emission Sources', 'Load BAR Data'].map((a) => (
                         <option key={a} value={a}>{a}</option>
                       ))}
                     </Select>
-                    <Button colorScheme="brand" onClick={onExecute} isDisabled={!selectedFile}>Execute</Button>
+                    <Button colorScheme="brand" onClick={handleProcessing} isDisabled={!selectedFile}>Execute</Button>
                     {selectedFile ? (
                       <VStack align="start" spacing={1} fontSize="sm">
                         <HStack><Badge>File</Badge><Text>{selectedFile.name}</Text></HStack>
