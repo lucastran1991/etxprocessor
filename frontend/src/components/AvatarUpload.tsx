@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -31,6 +31,11 @@ export default function AvatarUpload({
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(currentAvatarUrl)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const toast = useToast()
+
+  // Sync previewUrl with currentAvatarUrl prop changes
+  useEffect(() => {
+    setPreviewUrl(currentAvatarUrl)
+  }, [currentAvatarUrl])
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
