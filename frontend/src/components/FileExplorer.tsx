@@ -54,6 +54,7 @@ function FileTreeItem({
 }) {
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: level === 0 })
   const hasChildren = node.children && node.children.length > 0
+  const isFolder = node.type === 'folder'
 
   const formatFileSize = (bytes: number | undefined) => {
     if (!bytes) return ''
@@ -62,51 +63,83 @@ function FileTreeItem({
     return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`
   }
 
+  const handleClick = () => {
+    if (isFolder) {
+      onToggle()
+    } else if (onSelect) {
+      onSelect(node)
+    }
+  }
+
   return (
     <Box>
       <HStack
-        spacing={2}
-        py={1}
+        spacing={1}
+        py={1.5}
         px={2}
-        _hover={{ bg: 'gray.100', cursor: 'pointer' }}
+        pl={level * 4 + 2}
+        _hover={{ bg: isFolder ? 'blue.50' : 'gray.50', cursor: 'pointer' }}
         borderRadius="md"
-        onClick={() => {
-          if (node.type === 'folder') {
-            onToggle()
-          } else if (onSelect) {
-            onSelect(node)
-          }
-        }}
+        transition="all 0.2s"
+        onClick={handleClick}
       >
-        {node.type === 'folder' && (
-          <IconButton
-            aria-label="Toggle folder"
-            icon={isOpen ? <ChevronDownIcon /> : <ChevronRightIcon />}
-            size="xs"
-            variant="ghost"
+        {/* Chevron for folders */}
+        {isFolder ? (
+          <Box
+            as="button"
             onClick={(e) => {
               e.stopPropagation()
               onToggle()
             }}
-          />
+            p={1}
+            borderRadius="sm"
+            _hover={{ bg: 'gray.200' }}
+            transition="transform 0.2s"
+            transform={isOpen ? 'rotate(0deg)' : 'rotate(0deg)'}
+          >
+            <Icon
+              as={isOpen ? ChevronDownIcon : ChevronRightIcon}
+              boxSize={4}
+              color="gray.600"
+            />
+          </Box>
+        ) : (
+          <Box w="24px" />
         )}
-        {node.type !== 'folder' && <Box w="24px" />}
         
+        {/* Folder/File Icon */}
         <Icon
-          as={node.type === 'folder' ? (isOpen ? FaFolderOpen : FaFolder) : FaFile}
-          color={node.type === 'folder' ? 'yellow.500' : 'blue.500'}
+          as={isFolder ? (isOpen ? FaFolderOpen : FaFolder) : FaFile}
+          color={isFolder ? 'yellow.600' : 'blue.500'}
+          boxSize={4}
         />
         
-        <Text flex={1} fontSize="sm" noOfLines={1}>
+        {/* File/Folder Name */}
+        <Text 
+          flex={1} 
+          fontSize="sm" 
+          noOfLines={1}
+          fontWeight={isFolder ? 'semibold' : 'normal'}
+          color={isFolder ? 'gray.800' : 'gray.700'}
+        >
           {node.name}
         </Text>
         
+        {/* File Size */}
         {node.type === 'file' && node.size && (
-          <Text fontSize="xs" color="gray.500">
+          <Text fontSize="xs" color="gray.500" minW="60px" textAlign="right">
             {formatFileSize(node.size)}
           </Text>
         )}
         
+        {/* Folder Item Count */}
+        {isFolder && hasChildren && (
+          <Text fontSize="xs" color="gray.500" minW="40px" textAlign="right">
+            {node.children?.length} {node.children?.length === 1 ? 'item' : 'items'}
+          </Text>
+        )}
+        
+        {/* Delete Menu */}
         <Menu>
           <MenuButton
             as={IconButton}
@@ -126,15 +159,16 @@ function FileTreeItem({
               }}
               color="red.500"
             >
-              Delete
+              Delete {isFolder ? 'Folder' : 'File'}
             </MenuItem>
           </MenuList>
         </Menu>
       </HStack>
 
-      {node.type === 'folder' && hasChildren && (
-        <Collapse in={isOpen}>
-          <Box pl={level === 0 ? 4 : 6}>
+      {/* Folder Children */}
+      {isFolder && hasChildren && (
+        <Collapse in={isOpen} animateOpacity>
+          <Box>
             {node.children?.map((child) => (
               <FileTreeItem
                 key={child.id}
