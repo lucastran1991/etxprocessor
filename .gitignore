@@ -11,6 +11,7 @@ node_modules/
 
 # Environment variables
 .env
+.env*.local
 
 # Editor directories and files
 .idea
@@ -20,9 +21,52 @@ node_modules/
 *.njsproj
 *.sln
 *.sw?
+.history
 
 # OS specific
 .DS_Store
+Thumbs.db
+
+# Next.js / Node build artifacts
+**/.next/
+**/out/
+**/.vercel
+**/.turbo
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Python tooling caches
+.pytest_cache/
+.mypy_cache/
+.pytype/
+.hypothesis/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.pyre/
+.ipynb_checkpoints/
+.cache/
 
 # Uploads
 uploads/
