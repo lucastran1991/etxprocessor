@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   Box,
   Card,
@@ -15,6 +16,7 @@ import {
   Heading
 } from '@chakra-ui/react'
 import { useAuth } from '@/hooks/useAuth'
+import AvatarUpload from './AvatarUpload'
 
 interface User {
   id: string
@@ -32,8 +34,9 @@ interface UserProfileProps {
   user: User
 }
 
-export default function UserProfile({ user }: UserProfileProps) {
+export default function UserProfile({ user: initialUser }: UserProfileProps) {
   const { logout } = useAuth()
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(initialUser.avatar_url)
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -51,21 +54,25 @@ export default function UserProfile({ user }: UserProfileProps) {
     return Math.min(Math.max(progress, 0), 100)
   }
 
+  const handleAvatarUpdate = (newUrl: string | null) => {
+    setAvatarUrl(newUrl || undefined)
+  }
+
   return (
     <Card w="full" maxW="md">
       <CardBody>
         <VStack spacing={6}>
           <VStack spacing={4}>
-            <Avatar
-              size="xl"
-              src={user.avatar_url}
-              name={user.username}
+            <AvatarUpload
+              currentAvatarUrl={avatarUrl}
+              username={initialUser.username}
+              onAvatarUpdate={handleAvatarUpdate}
             />
             <VStack spacing={2}>
-              <Heading size="lg">{user.username}</Heading>
-              <Text color="gray.600">{user.email}</Text>
-              <Badge colorScheme={getRoleColor(user.role)} size="lg">
-                {user.role.toUpperCase()}
+              <Heading size="lg">{initialUser.username}</Heading>
+              <Text color="gray.600">{initialUser.email}</Text>
+              <Badge colorScheme={getRoleColor(initialUser.role)} size="lg">
+                {initialUser.role.toUpperCase()}
               </Badge>
             </VStack>
           </VStack>
@@ -74,12 +81,12 @@ export default function UserProfile({ user }: UserProfileProps) {
 
           <VStack spacing={4} w="full">
             <HStack justify="space-between" w="full">
-              <Text fontWeight="bold">Level {user.level}</Text>
-              <Text color="gray.600">{user.exp} EXP</Text>
+              <Text fontWeight="bold">Level {initialUser.level}</Text>
+              <Text color="gray.600">{initialUser.exp} EXP</Text>
             </HStack>
             
             <Progress
-              value={getExpProgress(user.exp, user.level)}
+              value={getExpProgress(initialUser.exp, initialUser.level)}
               colorScheme="blue"
               size="lg"
               w="full"
@@ -87,7 +94,7 @@ export default function UserProfile({ user }: UserProfileProps) {
             />
             
             <Text fontSize="sm" color="gray.500">
-              {user.exp - ((user.level - 1) * 100)} / {user.level * 100} EXP to next level
+              {initialUser.exp - ((initialUser.level - 1) * 100)} / {initialUser.level * 100} EXP to next level
             </Text>
           </VStack>
 
@@ -96,15 +103,15 @@ export default function UserProfile({ user }: UserProfileProps) {
           <VStack spacing={2} w="full">
             <HStack justify="space-between" w="full">
               <Text>Status:</Text>
-              <Badge colorScheme={user.is_active ? 'green' : 'red'}>
-                {user.is_active ? 'Active' : 'Inactive'}
+              <Badge colorScheme={initialUser.is_active ? 'green' : 'red'}>
+                {initialUser.is_active ? 'Active' : 'Inactive'}
               </Badge>
             </HStack>
             
             <HStack justify="space-between" w="full">
               <Text>Verified:</Text>
-              <Badge colorScheme={user.is_verified ? 'green' : 'gray'}>
-                {user.is_verified ? 'Yes' : 'No'}
+              <Badge colorScheme={initialUser.is_verified ? 'green' : 'gray'}>
+                {initialUser.is_verified ? 'Yes' : 'No'}
               </Badge>
             </HStack>
           </VStack>
