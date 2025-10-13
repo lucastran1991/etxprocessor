@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List
 from datetime import datetime
+import uuid
 
 class FileBase(BaseModel):
     original_filename: str
@@ -25,6 +26,15 @@ class FileResponse(FileBase):
     updated_at: Optional[datetime] = None
     children: Optional[List['FileResponse']] = None
 
+    @field_validator('id', 'user_id', 'parent_id', mode='before')
+    @classmethod
+    def convert_uuid_to_str(cls, v):
+        if v is None:
+            return v
+        if isinstance(v, uuid.UUID):
+            return str(v)
+        return v
+
     class Config:
         from_attributes = True
 
@@ -41,6 +51,15 @@ class FileTreeNode(BaseModel):
     path: str
     uploaded_at: datetime
     children: Optional[List['FileTreeNode']] = None
+
+    @field_validator('id', mode='before')
+    @classmethod
+    def convert_uuid_to_str(cls, v):
+        if v is None:
+            return v
+        if isinstance(v, uuid.UUID):
+            return str(v)
+        return v
 
 # Enable forward references
 FileResponse.model_rebuild()
