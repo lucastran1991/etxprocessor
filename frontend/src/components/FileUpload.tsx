@@ -33,16 +33,39 @@ export default function FileUpload({ onUploadComplete, currentFolder = '/' }: Fi
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
-    setSelectedFiles((prev) => [...prev, ...files])
+    const filtered = files.filter((f) => {
+      const name = f.name || ''
+      // Ignore dotfiles and known metadata
+      if (name.startsWith('.')) return false
+      if (name === '.DS_Store' || name === '.gitignore' || name === '.git') return false
+      return true
+    })
+    setSelectedFiles((prev) => [...prev, ...filtered])
   }
 
   const handleFolderSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
-    setSelectedFiles((prev) => [...prev, ...files])
+    const filtered = files.filter((f: any) => {
+      const name = f.name || ''
+      const rp: string = f.webkitRelativePath || ''
+      // Ignore any file within .git directories or hidden paths
+      if (name.startsWith('.')) return false
+      if (name === '.DS_Store' || name === '.gitignore' || name === '.git') return false
+      if (rp.includes('/.git/') || rp.startsWith('.git/')) return false
+      if (rp.split('/').some((seg) => seg.startsWith('.'))) return false
+      return true
+    })
+    setSelectedFiles((prev) => [...prev, ...filtered])
   }
 
   const removeFile = (index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const clearSelection = () => {
+    setSelectedFiles([])
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    if (folderInputRef.current) folderInputRef.current.value = ''
   }
 
   const handleUpload = async () => {
@@ -195,17 +218,26 @@ export default function FileUpload({ onUploadComplete, currentFolder = '/' }: Fi
             ))}
           </List>
 
-          <Button
-            colorScheme="green"
-            size="sm"
-            onClick={handleUpload}
-            isLoading={isUploading}
-            loadingText="Uploading..."
-            mt={2}
-            w="full"
-          >
-            Upload {selectedFiles.length} File(s)
-          </Button>
+          <HStack mt={2}>
+            <Button
+              colorScheme="green"
+              size="sm"
+              onClick={handleUpload}
+              isLoading={isUploading}
+              loadingText="Uploading..."
+              flex={1}
+            >
+              Upload {selectedFiles.length} File(s)
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearSelection}
+              isDisabled={isUploading}
+            >
+              Clear
+            </Button>
+          </HStack>
 
           {isUploading && (
             <Box mt={2}>

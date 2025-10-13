@@ -68,11 +68,12 @@ export default function Header() {
         <DrawerHeader>Menu</DrawerHeader>
         <DrawerBody>
           <VStack spacing={4} align="stretch">
-            <NavLink href="/">Home</NavLink>
+            {/* Home hidden */}
             {user ? (
               <>
                 <NavLink href="/dashboard">Dashboard</NavLink>
                 <NavLink href="/files">Files</NavLink>
+                <NavLink href="/processing">Processing</NavLink>
                 <NavLink href="/profile">Profile</NavLink>
                 <Button onClick={handleLogout} colorScheme="red" variant="outline">
                   Logout
@@ -119,11 +120,12 @@ export default function Header() {
         {/* Desktop Navigation */}
         <Flex alignItems="center" display={{ base: 'none', md: 'flex' }}>
           <HStack spacing={8}>
-            <NavLink href="/">Home</NavLink>
+            {/* Home hidden */}
             {user ? (
               <>
                 <NavLink href="/dashboard">Dashboard</NavLink>
                 <NavLink href="/files">Files</NavLink>
+                <NavLink href="/processing">Processing</NavLink>
                 <NavLink href="/profile">Profile</NavLink>
                 <Menu>
                   <MenuButton

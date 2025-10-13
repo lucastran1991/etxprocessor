@@ -1,22 +1,30 @@
 'use client'
 
-import { Box, Container, Heading, Text, VStack, Grid, GridItem, Card, CardBody, Stat, StatLabel, StatNumber, StatHelpText, StatArrow, useColorModeValue } from '@chakra-ui/react'
+import { Box, Container, Heading, Text, VStack, Grid, GridItem, Card, CardBody, Stat, StatLabel, StatNumber, StatHelpText, StatArrow, useColorModeValue, HStack, Badge } from '@chakra-ui/react'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/layout/Layout'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { apiClient } from '@/services/apiClient'
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const cardBg = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('gray.200', 'gray.700')
+  const [storage, setStorage] = useState<any | null>(null)
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login')
     }
   }, [user, isLoading, router])
+
+  useEffect(() => {
+    if (user) {
+      apiClient.get('/files/storage').then(res => setStorage(res.data)).catch(() => {})
+    }
+  }, [user])
 
   if (isLoading) {
     return (
@@ -102,6 +110,70 @@ export default function Dashboard() {
                     <StatHelpText>
                       User permissions
                     </StatHelpText>
+                  </Stat>
+                </CardBody>
+              </Card>
+            </GridItem>
+          </Grid>
+
+          {/* File Storage Stats */}
+          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} gap={6}>
+            <GridItem>
+              <Card bg={cardBg} borderColor={borderColor} borderWidth="1px">
+                <CardBody>
+                  <Stat>
+                    <StatLabel>Total Files</StatLabel>
+                    <StatNumber>{storage?.file_count ?? '-'}</StatNumber>
+                  </Stat>
+                </CardBody>
+              </Card>
+            </GridItem>
+            <GridItem>
+              <Card bg={cardBg} borderColor={borderColor} borderWidth="1px">
+                <CardBody>
+                  <Stat>
+                    <StatLabel>Total Size</StatLabel>
+                    <StatNumber>{storage ? (storage.total_size / (1024 * 1024)).toFixed(2) + ' MB' : '-'}</StatNumber>
+                  </Stat>
+                </CardBody>
+              </Card>
+            </GridItem>
+            <GridItem>
+              <Card bg={cardBg} borderColor={borderColor} borderWidth="1px">
+                <CardBody>
+                  <Stat>
+                    <StatLabel>Images</StatLabel>
+                    <StatNumber>{storage?.by_type?.images ?? '-'}</StatNumber>
+                  </Stat>
+                </CardBody>
+              </Card>
+            </GridItem>
+            <GridItem>
+              <Card bg={cardBg} borderColor={borderColor} borderWidth="1px">
+                <CardBody>
+                  <Stat>
+                    <StatLabel>PDF</StatLabel>
+                    <StatNumber>{storage?.by_type?.pdf ?? '-'}</StatNumber>
+                  </Stat>
+                </CardBody>
+              </Card>
+            </GridItem>
+            <GridItem>
+              <Card bg={cardBg} borderColor={borderColor} borderWidth="1px">
+                <CardBody>
+                  <Stat>
+                    <StatLabel>CSV</StatLabel>
+                    <StatNumber>{storage?.by_type?.csv ?? '-'}</StatNumber>
+                  </Stat>
+                </CardBody>
+              </Card>
+            </GridItem>
+            <GridItem>
+              <Card bg={cardBg} borderColor={borderColor} borderWidth="1px">
+                <CardBody>
+                  <Stat>
+                    <StatLabel>Others</StatLabel>
+                    <StatNumber>{storage?.by_type?.others ?? '-'}</StatNumber>
                   </Stat>
                 </CardBody>
               </Card>

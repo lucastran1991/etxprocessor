@@ -1,44 +1,23 @@
 'use client'
 
-import { Box, Container, Heading, Text, VStack } from '@chakra-ui/react'
+import { Container, Text } from '@chakra-ui/react'
 import { useAuth } from '@/hooks/useAuth'
-import LoginForm from '@/components/LoginForm'
-import UserProfile from '@/components/UserProfile'
-import Layout from '@/components/layout/Layout'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 export default function Home() {
   const { user, isLoading } = useAuth()
+  const router = useRouter()
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <Container maxW="md" py={10}>
-          <Text>Loading...</Text>
-        </Container>
-      </Layout>
-    )
-  }
+  useEffect(() => {
+    if (!isLoading) {
+      router.replace(user ? '/dashboard' : '/login')
+    }
+  }, [user, isLoading, router])
 
   return (
-    <Layout>
-      <Container maxW="md" py={10}>
-        <VStack spacing={8}>
-          <Box textAlign="center">
-            <Heading as="h1" size="xl" mb={4}>
-              ETX Processor
-            </Heading>
-            <Text fontSize="lg" color="gray.600">
-              Financial data processing system
-            </Text>
-          </Box>
-
-          {user ? (
-            <UserProfile user={user} />
-          ) : (
-            <LoginForm showRegisterLink={false} />
-          )}
-        </VStack>
-      </Container>
-    </Layout>
+    <Container maxW="md" py={10}>
+      <Text>Redirecting…</Text>
+    </Container>
   )
 }

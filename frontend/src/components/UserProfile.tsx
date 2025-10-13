@@ -36,7 +36,7 @@ interface UserProfileProps {
 }
 
 export default function UserProfile({ user: initialUser }: UserProfileProps) {
-  const { logout } = useAuth()
+  const { logout, updateUserAvatar } = useAuth()
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(initialUser.avatar_url)
 
   const getRoleColor = (role: string) => {
@@ -57,6 +57,7 @@ export default function UserProfile({ user: initialUser }: UserProfileProps) {
 
   const handleAvatarUpdate = (newUrl: string | null) => {
     setAvatarUrl(newUrl || undefined)
+    updateUserAvatar(newUrl || undefined)
   }
 
   return (

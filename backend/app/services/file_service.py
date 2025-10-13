@@ -268,9 +268,42 @@ class FileService:
                 File.is_folder == False
             )
         ).count()
+        # Category counts
+        images_count = self.db.query(func.count()).filter(
+            and_(
+                File.user_id == user_id,
+                File.is_folder == False,
+                File.mime_type.isnot(None),
+                File.mime_type.like('image/%')
+            )
+        ).scalar() or 0
+        pdf_count = self.db.query(func.count()).filter(
+            and_(
+                File.user_id == user_id,
+                File.is_folder == False,
+                File.mime_type == 'application/pdf'
+            )
+        ).scalar() or 0
+        csv_count = self.db.query(func.count()).filter(
+            and_(
+                File.user_id == user_id,
+                File.is_folder == False,
+                or_(
+                    File.mime_type == 'text/csv',
+                    File.mime_type == 'application/vnd.ms-excel'
+                )
+            )
+        ).scalar() or 0
+        others_count = max(file_count - (images_count + pdf_count + csv_count), 0)
 
         return {
             "total_size": total_size,
-            "file_count": file_count
+            "file_count": file_count,
+            "by_type": {
+                "images": images_count,
+                "pdf": pdf_count,
+                "csv": csv_count,
+                "others": others_count
+            }
         }
 

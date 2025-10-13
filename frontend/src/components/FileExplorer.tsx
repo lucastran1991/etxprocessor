@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import type React from 'react'
 import {
   Box,
   VStack,
@@ -39,6 +40,8 @@ interface FileNode {
 interface FileExplorerProps {
   onFileSelect?: (file: FileNode) => void
   onRefresh?: () => void
+  readOnly?: boolean
+  hideItemDelete?: boolean
 }
 
 function FileTreeItem({
@@ -47,14 +50,22 @@ function FileTreeItem({
   onDelete,
   onSelect,
   onCreateFolder,
+  readOnly,
+  hideItemDelete,
+  expandSignal,
+  collapseSignal,
 }: {
   node: FileNode
   level?: number
   onDelete: (id: string) => void
   onSelect?: (file: FileNode) => void
   onCreateFolder: (parentPath: string) => void
+  readOnly?: boolean
+  hideItemDelete?: boolean
+  expandSignal: number
+  collapseSignal: number
 }) {
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: level === 0 })
+  const { isOpen, onToggle, onOpen, onClose } = useDisclosure({ defaultIsOpen: level === 0 })
   const hasChildren = node.children && node.children.length > 0
   const isFolder = node.type === 'folder'
 
@@ -73,6 +84,17 @@ function FileTreeItem({
     }
   }
 
+  // Respond to global expand/collapse signals
+  useEffect(() => {
+    if (isFolder) onOpen()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandSignal])
+
+  useEffect(() => {
+    if (isFolder) onClose()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collapseSignal])
+
   return (
     <Box>
       <HStack
@@ -89,7 +111,7 @@ function FileTreeItem({
         {isFolder ? (
           <Box
             as="button"
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.stopPropagation()
               onToggle()
             }}
@@ -141,40 +163,44 @@ function FileTreeItem({
           </Text>
         )}
         
-        {/* Delete Menu */}
-        <Menu>
-          <MenuButton
-            as={IconButton}
-            aria-label="Options"
-            icon={<DeleteIcon />}
-            size="xs"
-            variant="ghost"
-            colorScheme="red"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <MenuList>
-            {isFolder && (
-              <MenuItem
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onCreateFolder(node.path)
-                }}
-              >
-                New Subfolder
-              </MenuItem>
-            )}
-            <MenuItem
+        {/* Actions Menu (hidden in readOnly) */}
+        {!readOnly && (
+          <Menu>
+            <MenuButton
+              as={IconButton}
+              aria-label="Options"
               icon={<DeleteIcon />}
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete(node.id)
-              }}
-              color="red.500"
-            >
-              Delete {isFolder ? 'Folder' : 'File'}
-            </MenuItem>
-          </MenuList>
-        </Menu>
+              size="xs"
+              variant="ghost"
+              colorScheme="red"
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
+            />
+            <MenuList>
+              {isFolder && (
+                <MenuItem
+                  onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                    e.stopPropagation()
+                    onCreateFolder(node.path)
+                  }}
+                >
+                  New Subfolder
+                </MenuItem>
+              )}
+              {!hideItemDelete && (
+                <MenuItem
+                  icon={<DeleteIcon />}
+                  onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                    e.stopPropagation()
+                    onDelete(node.id)
+                  }}
+                  color="red.500"
+                >
+                  Delete {isFolder ? 'Folder' : 'File'}
+                </MenuItem>
+              )}
+            </MenuList>
+          </Menu>
+        )}
       </HStack>
 
       {/* Folder Children */}
@@ -189,6 +215,10 @@ function FileTreeItem({
                 onDelete={onDelete}
                 onSelect={onSelect}
                 onCreateFolder={onCreateFolder}
+                readOnly={readOnly}
+                hideItemDelete={hideItemDelete}
+                expandSignal={expandSignal}
+                collapseSignal={collapseSignal}
               />
             ))}
           </Box>
@@ -198,10 +228,12 @@ function FileTreeItem({
   )
 }
 
-export default function FileExplorer({ onFileSelect, onRefresh }: FileExplorerProps) {
+export default function FileExplorer({ onFileSelect, onRefresh, readOnly = false, hideItemDelete = false }: FileExplorerProps) {
   const [fileTree, setFileTree] = useState<FileNode[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
+  const [expandSignal, setExpandSignal] = useState(0)
+  const [collapseSignal, setCollapseSignal] = useState(0)
   const toast = useToast()
 
   const loadFileTree = async () => {
@@ -343,8 +375,21 @@ export default function FileExplorer({ onFileSelect, onRefresh }: FileExplorerPr
 
   return (
     <VStack align="stretch" spacing={2}>
-      <HStack justify="space-between" px={2} py={1}>
-        <HStack>
+      {fileTree.map((node) => (
+        <FileTreeItem
+          key={node.id}
+          node={node}
+          onDelete={handleDelete}
+          onSelect={onFileSelect}
+          onCreateFolder={handleCreateFolder}
+          readOnly={readOnly}
+          hideItemDelete={hideItemDelete}
+          expandSignal={expandSignal}
+          collapseSignal={collapseSignal}
+        />
+      ))}
+      {!readOnly && (
+        <HStack justify="space-between" px={2} py={2}>
           <IconButton
             aria-label="New folder"
             icon={<Icon as={FaFolder} />}
@@ -354,26 +399,35 @@ export default function FileExplorer({ onFileSelect, onRefresh }: FileExplorerPr
             onClick={() => handleCreateFolder('/')}
             isDisabled={isLoading}
           />
+          <HStack spacing={2}>
+            <IconButton
+              aria-label="Expand all"
+              icon={<ChevronDownIcon />}
+              variant="outline"
+              size="sm"
+              onClick={() => setExpandSignal((v) => v + 1)}
+              isDisabled={isLoading || fileTree.length === 0}
+            />
+            <IconButton
+              aria-label="Collapse all"
+              icon={<ChevronRightIcon />}
+              variant="outline"
+              size="sm"
+              onClick={() => setCollapseSignal((v) => v + 1)}
+              isDisabled={isLoading || fileTree.length === 0}
+            />
+          </HStack>
+          <IconButton
+            aria-label="Delete all"
+            icon={<DeleteIcon />}
+            colorScheme="red"
+            variant="outline"
+            size="sm"
+            onClick={handleDeleteAll}
+            isDisabled={isLoading || isBulkDeleting || fileTree.length === 0}
+          />
         </HStack>
-        <IconButton
-          aria-label="Delete all"
-          icon={<DeleteIcon />}
-          colorScheme="red"
-          variant="outline"
-          size="sm"
-          onClick={handleDeleteAll}
-          isDisabled={isLoading || isBulkDeleting || fileTree.length === 0}
-        />
-      </HStack>
-      {fileTree.map((node) => (
-        <FileTreeItem
-          key={node.id}
-          node={node}
-          onDelete={handleDelete}
-          onSelect={onFileSelect}
-          onCreateFolder={handleCreateFolder}
-        />
-      ))}
+      )}
     </VStack>
   )
 }
