@@ -5,7 +5,7 @@ from app.schemas.user import UserResponse, UserUpdate
 from app.services.user_service import UserService
 from app.core.auth import get_current_user
 from typing import List
-from app.models.user import UserRole
+from app.models.user import User
 import json
 
 router = APIRouter()

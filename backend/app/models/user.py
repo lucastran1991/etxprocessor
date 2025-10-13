@@ -1,15 +1,10 @@
-from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Enum
+from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 import uuid
 import enum
 
 from app.core.database import Base
-
-class UserRole(str, enum.Enum):
-    ADMIN = "admin"
-    USER = "user"
-    MODERATOR = "moderator"
 
 class User(Base):
     __tablename__ = "users"
@@ -18,7 +13,7 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
     password = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), default=UserRole.USER)
+    role = Column(String(255), nullable=False, server_default='user')
     avatar_url = Column(String(500), nullable=True)
     level = Column(Integer, default=1)
     exp = Column(Float, default=0.0)

@@ -23,7 +23,7 @@ class UserService:
             username=user_data.username,
             email=user_data.email,
             password=hashed_password,
-            role=user_data.role
+            role=user_data.role or 'user'
         )
         self.db.add(db_user)
         self.db.commit()

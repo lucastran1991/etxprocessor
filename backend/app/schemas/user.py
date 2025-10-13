@@ -2,12 +2,12 @@ from pydantic import BaseModel, EmailStr, validator
 from typing import Optional
 from datetime import datetime
 import uuid
-from app.models.user import UserRole
+from typing import Optional
 
 class UserBase(BaseModel):
     username: str
     email: EmailStr
-    role: UserRole = UserRole.USER
+    role: str = 'user'
 
 class UserCreate(UserBase):
     password: str
