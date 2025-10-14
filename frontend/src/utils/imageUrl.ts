@@ -16,12 +16,16 @@ export function getImageUrl(url: string | undefined | null): string | undefined 
 
   // For local paths starting with /uploads/, prepend the API URL
   if (url.startsWith('/uploads/')) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+    const apiUrl = (typeof window !== 'undefined')
+      ? `${window.location.protocol}//${window.location.hostname}:8000`
+      : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000')
     return `${apiUrl}${url}`
   }
 
   // For other relative paths, assume they're from the API
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+  const apiUrl = (typeof window !== 'undefined')
+    ? `${window.location.protocol}//${window.location.hostname}:8000`
+    : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000')
   return `${apiUrl}/uploads/${url}`
 }
 
