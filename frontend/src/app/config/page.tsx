@@ -66,7 +66,7 @@ export default function ConfigPage() {
   }
 
   return (
-    <Layout>
+    <>
       <Container maxW="container.lg" py={8}>
         <VStack align="stretch" spacing={6}>
           <Heading size="xl">Configuration</Heading>
@@ -109,7 +109,7 @@ export default function ConfigPage() {
           </Card>
         </VStack>
       </Container>
-    </Layout>
+    </>
   )
 }
 
