@@ -9,7 +9,10 @@ import traceback
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 import time
-
+from app.services.file_service import FileService
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Form
+from sqlalchemy.orm import Session
+from app.models.user import User
 import pandas as pd
 import requests
 import websocket
@@ -398,28 +401,37 @@ class ProcessingService:
         return "Successfully!!"
 
     @log_call
-    def createorg(self, dataFile: Optional[str] = None, tenantName: Optional[str] = None) -> str:
+    def createorg(
+        self,
+        dataFile: Optional[str] = None,
+        tenantName: Optional[str] = None,
+        db: Session = None,
+        user: User = None,
+    ) -> str:
         config = self.load_config()
         ws = self.ws_init(config)
         mid = uuid.uuid4()
-        file_path = os.path.join(os.path.dirname(__file__), "uploads", dataFile or '')
-        print("file_path: ", file_path)
-        df = pd.read_csv(file_path)
-        csv_string = df.to_csv(index=False)
-        if tenantName:
-            ws.send("""#\nGetOrgs:\n    mid: '1360bce9-30ce-4c86-9749-92faa7f7114f'""")
-            resp = self.wait_for_response(ws) or {}
-            dict_org = (resp.get("GetOrgs", {}) or {}).get("Orgs", {})
-            org_id = ''
-            for key, value in dict_org.items():
-                if value.get('name') == tenantName:
-                    org_id = key            
-            setorg = f"""#\n$org = GetOrgs().Orgs.getFirst()\n$args.mid = 'm1'\n$args.id = '{org_id}' # Org Id of Tenant\nSetOrg($args)\n    """
-            ws.send(setorg)
-            _ = self.wait_for_response(ws)
-        payload = f"""#\nAsync => CreateOrgStructureFromCsv(mid: \"{mid}\", data: '{csv_string}')"""
-        ws.send(payload)
-        _ = self.wait_for_response(ws)
+        file_service = FileService(db)
+        csv_string = file_service.get_file_by_id(dataFile, str(user.id))
+        print("csv_string: ", csv_string)
+
+        # df = pd.read_csv(file_path)
+        # csv_string = df.to_csv(index=False)
+        # if tenantName:
+        #     ws.send("""#\nGetOrgs:\n    mid: '1360bce9-30ce-4c86-9749-92faa7f7114f'""")
+        #     resp = self.wait_for_response(ws) or {}
+        #     dict_org = (resp.get("GetOrgs", {}) or {}).get("Orgs", {})
+        #     org_id = ''
+        #     for key, value in dict_org.items():
+        #         if value.get('name') == tenantName:
+        #             org_id = key            
+        #     setorg = f"""#\n$org = GetOrgs().Orgs.getFirst()\n$args.mid = 'm1'\n$args.id = '{org_id}' # Org Id of Tenant\nSetOrg($args)\n    """
+        #     ws.send(setorg)
+        #     _ = self.wait_for_response(ws)
+        # payload = f"""#\nAsync => CreateOrgStructureFromCsv(mid: \"{mid}\", data: '{csv_string}')"""
+        # ws.send(payload)
+        # _ = self.wait_for_response(ws)
+
         ws.close()
         return "Successfully!!"
 

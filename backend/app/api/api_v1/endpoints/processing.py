@@ -4,6 +4,8 @@ from typing import Optional
 
 from app.core.database import get_db
 from app.core.processing import processing_service
+from app.core.auth import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
@@ -13,9 +15,15 @@ async def create_org(
     dataFile: str = Form(...),
     tenantName: Optional[str] = Form(None),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     try:
-        msg = processing_service.createorg(dataFile=dataFile, tenantName=tenantName)
+        msg = processing_service.createorg(
+            dataFile=dataFile,
+            tenantName=tenantName,
+            db=db,
+            user=current_user,
+        )
         return {"message": msg}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
