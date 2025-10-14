@@ -21,6 +21,7 @@ import Layout from '@/components/layout/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import FileExplorer from '@/components/FileExplorer'
+import { processingService } from '../../services/processingService'
 
 interface FileNode {
   id: string
@@ -36,7 +37,7 @@ export default function ProcessingPage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null)
-  const [action, setAction] = useState<string>('Select Action')
+  const [action, setAction] = useState<string>('Import Organizations')
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -46,6 +47,9 @@ export default function ProcessingPage() {
 
   const handleProcessing = async () => {
     if (!selectedFile || !action) return;
+
+    console.log('selectedFile', selectedFile)
+    console.log('action', action)
 
     try {
       const formData = new FormData();
@@ -66,10 +70,8 @@ export default function ProcessingPage() {
           return;
       }
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        body: formData
-      });
+      const response = await processingService[action](selectedFile.path)
+      console.log('response', response)
 
       if (!response.ok) {
         throw new Error(`Processing failed: ${response.statusText}`);
