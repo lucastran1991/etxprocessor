@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.api.api_v1.api import api_router
+from app.core.database import Base, engine
 from pathlib import Path
 import shutil
 
@@ -24,6 +25,14 @@ app.add_middleware(
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Auto-create database schema in fresh environments
+if settings.AUTO_CREATE_DB:
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        # Don't crash startup; log to console. Alembic can still manage schema if desired
+        print(f"Warning: AUTO_CREATE_DB failed: {e}")
 
 def _seed_avatars_if_needed(upload_root: Path) -> None:
     """Copy bundled avatar images to uploads/avatars if directory is empty.

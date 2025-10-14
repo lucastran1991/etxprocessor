@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     AVATAR_SOURCE_DIR: str = "avatar"  # Directory containing seed avatars (relative to backend working dir)
     AVATAR_UPLOAD_SUBDIR: str = "avatars"  # Subdirectory under LOCAL_UPLOAD_DIR where avatars are served
     
+    # DB bootstrap (create tables automatically on startup for fresh deployments)
+    AUTO_CREATE_DB: bool = True
+    
     # AWS S3 (only used when STORAGE_TYPE="s3")
     AWS_ACCESS_KEY_ID: Optional[str] = None
     AWS_SECRET_ACCESS_KEY: Optional[str] = None
