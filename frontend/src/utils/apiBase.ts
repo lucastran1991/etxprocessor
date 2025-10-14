@@ -31,7 +31,11 @@ export function resolveApiBaseUrl(): string {
       return `${protocol}//${hostname}:${backendPort}`
     }
 
-    // For production domains, prefer same host on port 8000 unless overridden
+    // For production domains, if host includes our known domain, pin to it
+    if (/veoliaint\.atomiton\.com$/i.test(hostname)) {
+      return `${protocol}//veoliaint.atomiton.com:${backendPort}`
+    }
+    // Otherwise use same host on port 8000
     return `${protocol}//${hostname}:${backendPort}`
   }
 
