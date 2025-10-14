@@ -109,6 +109,47 @@ class ProcessingService:
     # ----------------------------- basic utilities -----------------------------
     @log_call
     def load_config(self) -> Dict[str, Any]:
+        """Load configuration with robust fallbacks.
+
+        Precedence:
+        1) ETX_CONFIG_JSON (absolute path to JSON file)
+        2) Remote API using ETX_API_BASE and ETX_BEARER_TOKEN -> /api/v1/users/me/config
+        3) Local file app/core/etxbatch.json
+        """
+
+        # 1) Explicit file path override via env
+        path_override = os.getenv('ETX_CONFIG_JSON')
+        if path_override:
+            try:
+                with open(path_override) as f:
+                    cfg = json.load(f)
+                    if isinstance(cfg, dict):
+                        self.logger.info(f"Loaded config from ETX_CONFIG_JSON: {path_override}")
+                        return cfg
+            except Exception:
+                self.logger.exception(f"Failed to load ETX_CONFIG_JSON from {path_override}")
+
+        # 2) Remote API (requires bearer token)
+        base_url = os.getenv('ETX_API_BASE') or 'http://127.0.0.1:8000'
+        token = os.getenv('ETX_BEARER_TOKEN')
+        if token:
+            try:
+                url = base_url.rstrip('/') + '/api/v1/users/me/config'
+                headers = {'Authorization': f'Bearer {token}'}
+                resp = requests.get(url, headers=headers, timeout=15)
+                if resp.status_code == 200:
+                    data = resp.json() or {}
+                    if isinstance(data, dict):
+                        self.logger.info(f"Loaded config from remote API: {url}")
+                        return data
+                    else:
+                        self.logger.info("Remote config did not return an object; ignoring")
+                else:
+                    self.logger.info(f"Remote config GET failed: {resp.status_code}")
+            except Exception:
+                self.logger.exception("Failed to load remote config")
+
+        # 3) Local default file (project-checked-in config)
         config_path = os.path.join(os.path.dirname(__file__), 'etxbatch.json')
         with open(config_path) as f:
             return json.load(f)
