@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import { Container, Heading, VStack, Card, CardHeader, CardBody, Divider, SimpleGrid, FormControl, FormLabel, Input, Button, useToast, HStack, Textarea } from '@chakra-ui/react'
-import Layout from '@/components/layout/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/services/apiClient'
@@ -84,7 +83,7 @@ export default function ConfigPage() {
                 </FormControl>
                 <FormControl>
                   <FormLabel>JSON Preview</FormLabel>
-                  <Textarea value={jsonText} onChange={(e) => setJsonText(e.target.value)} placeholder="{\n  \"HTTPURI\": \"http://...\"\n}" rows={6} />
+                  <Textarea value={jsonText} onChange={(e) => setJsonText(e.target.value)} placeholder={`{\n  "HTTPURI": "http://..."\n}`} rows={6} />
                 </FormControl>
               </HStack>
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
