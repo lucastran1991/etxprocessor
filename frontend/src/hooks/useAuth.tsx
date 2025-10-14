@@ -84,7 +84,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const updateUserAvatar = (avatarUrl?: string) => {
-    setUser((prev) => (prev ? { ...prev, avatar_url: avatarUrl } : prev))
+    // Append a cache-busting query parameter so UI refreshes immediately
+    const withBust = avatarUrl
+      ? `${avatarUrl}${avatarUrl.includes('?') ? '&' : '?'}t=${Date.now()}`
+      : avatarUrl
+    setUser((prev) => (prev ? { ...prev, avatar_url: withBust } : prev))
   }
 
   return (
