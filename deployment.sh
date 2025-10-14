@@ -53,10 +53,15 @@ deploy_frontend() {
     if [[ $FORCE -eq 1 ]]; then kill_port 8888; sleep 1; fi
   fi
   if check_port 8888; then echo "port 8888 in use; skipping"; else
-    # Serve static export from out/ with a simple HTTP server
-    # Unified log with [FE] tag
-    nohup npx serve@latest out -l tcp://0.0.0.0:8888 2>&1 | sed -e 's/^/[FE] /' >> "$ROOT_DIR/system.log" &
+    # FIXED: Use serve for static export instead of next start
+    nohup npx serve@latest out -p 8888 2>&1 | sed -e 's/^/[FE] /' >> "$ROOT_DIR/system.log" &
     echo $! > "$ROOT_DIR/frontend.pid"
+    sleep 2  # Give it time to start
+    # Verify the service actually started
+    if ! check_port 8888; then
+      echo "ERROR: Frontend failed to start on port 8888"
+      return 1
+    fi
   fi
 }
 
@@ -65,6 +70,6 @@ deploy_frontend
 
 echo "==> Deployment complete"
 echo "API:      http://0.0.0.0:8000"
-echo "Frontend: http://0.0.0.0:8888"
+echo "Frontend: http3000.0.0.0:8888"
 
 
