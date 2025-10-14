@@ -53,8 +53,9 @@ deploy_frontend() {
     if [[ $FORCE -eq 1 ]]; then kill_port 8888; sleep 1; fi
   fi
   if check_port 8888; then echo "port 8888 in use; skipping"; else
+    # Serve static export from out/ with a simple HTTP server
     # Unified log with [FE] tag
-    nohup npm run start -- -H 0.0.0.0 -p 8888 2>&1 | sed -e 's/^/[FE] /' >> "$ROOT_DIR/system.log" &
+    nohup npx serve@latest out -l tcp://0.0.0.0:8888 2>&1 | sed -e 's/^/[FE] /' >> "$ROOT_DIR/system.log" &
     echo $! > "$ROOT_DIR/frontend.pid"
   fi
 }
