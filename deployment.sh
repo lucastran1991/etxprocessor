@@ -19,9 +19,18 @@ check_port() {
   if lsof -Pi :$1 -sTCP:LISTEN -t >/dev/null ; then return 0; else return 1; fi
 }
 
-if [[ $FORCE -eq 1 && -f .env.production ]]; then
+# Validate .env files exist and copy if needed
+if [[ $FORCE -eq 1 ]]; then
+  if [[ ! -f $FRONTEND_DIR/.env.production ]]; then
+    echo "ERROR: Missing required .env.production file"
+    exit 1
+  fi
   echo "Forcing .env.local update from .env.production"
-  cp .env.production .env.local
+  cp $FRONTEND_DIR/.env.production $FRONTEND_DIR/.env.local
+  if [[ ! -f $FRONTEND_DIR/.env.local ]]; then
+    echo "ERROR: Failed to create .env.local"
+    exit 1  
+  fi
 fi
 
 kill_port() {
