@@ -2,13 +2,20 @@ import axios from 'axios'
 import Cookies from 'js-cookie'
 import { resolveApiBaseUrl } from '@/utils/apiBase'
 
-const API_URL = resolveApiBaseUrl()
-
 export const apiClient = axios.create({
-  baseURL: `${API_URL}/api/v1`,
   headers: {
     'Content-Type': 'application/json',
   },
+})
+
+// Ensure baseURL is resolved at request time (avoids SSR/static export bake-in)
+apiClient.interceptors.request.use((config) => {
+  const isAbsolute = /^https?:\/\//i.test(config.url || '')
+  if (!isAbsolute) {
+    const apiUrl = `${resolveApiBaseUrl()}/api/v1`
+    config.baseURL = apiUrl
+  }
+  return config
 })
 
 // Add request interceptor to include auth token
