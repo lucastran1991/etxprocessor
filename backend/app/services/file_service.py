@@ -5,6 +5,7 @@ from app.models.file import File
 from app.schemas.file import FileCreate, FolderCreate, FileTreeNode
 import uuid
 import os
+from app.services.storage_service import storage_service
 
 class FileService:
     def __init__(self, db: Session):
@@ -66,6 +67,13 @@ class FileService:
                 File.user_id == user_id
             )
         ).first()
+
+    def get_file_content(self, file_id: str, user_id: str) -> Optional[bytes]:
+        """Return file content as bytes for a user's file_id. None if not found or is a folder."""
+        f = self.get_file_by_id(file_id, user_id)
+        if not f or f.is_folder:
+            return None
+        return storage_service.read_file_bytes(f.file_path)
 
     def ensure_folder_hierarchy(self, user_id: str, folder_path: str) -> None:
         """Ensure that all folders in the given folder_path exist for the user."""

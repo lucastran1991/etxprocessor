@@ -84,6 +84,31 @@ class StorageService:
         else:
             # For local storage, return the path relative to upload directory
             return f"/uploads/{file_path}"
+
+    def read_file_bytes(self, file_path: str) -> Optional[bytes]:
+        """
+        Read file content from storage and return raw bytes.
+        Supports both local filesystem and S3 based on configuration.
+        """
+        try:
+            if self.storage_type == "s3" and self.s3_client:
+                # Derive S3 key from URL/path
+                if file_path.startswith('http'):
+                    key = file_path.split(f"{settings.AWS_S3_BUCKET}.s3.{settings.AWS_REGION}.amazonaws.com/")[1]
+                else:
+                    key = file_path
+                obj = self.s3_client.get_object(Bucket=settings.AWS_S3_BUCKET, Key=key)
+                return obj["Body"].read()
+            else:
+                # Local filesystem
+                rel_path = file_path[9:] if file_path.startswith('/uploads/') else file_path
+                full_path = Path(settings.LOCAL_UPLOAD_DIR) / rel_path
+                if not full_path.exists() or not full_path.is_file():
+                    return None
+                return full_path.read_bytes()
+        except Exception as e:
+            print(f"Error reading file content: {e}")
+            return None
     
     def _upload_to_s3(self, file_content: bytes, filename: str, content_type: str, folder: str) -> Optional[str]:
         """Upload file to S3"""

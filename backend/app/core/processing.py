@@ -412,8 +412,11 @@ class ProcessingService:
         ws = self.ws_init(config)
         mid = uuid.uuid4()
         file_service = FileService(db)
-        csv_string = file_service.get_file_by_id(dataFile, str(user.id))
-        print("csv_string: ", csv_string)
+        file_bytes = file_service.get_file_content(dataFile, str(user.id))
+        if not file_bytes:
+            ws.close()
+            return "error", {"message": "file not found or empty"}
+        csv_string = file_bytes.decode("utf-8", errors="replace")
 
         # df = pd.read_csv(file_path)
         # csv_string = df.to_csv(index=False)
@@ -428,12 +431,17 @@ class ProcessingService:
         #     setorg = f"""#\n$org = GetOrgs().Orgs.getFirst()\n$args.mid = 'm1'\n$args.id = '{org_id}' # Org Id of Tenant\nSetOrg($args)\n    """
         #     ws.send(setorg)
         #     _ = self.wait_for_response(ws)
-        # payload = f"""#\nAsync => CreateOrgStructureFromCsv(mid: \"{mid}\", data: '{csv_string}')"""
-        # ws.send(payload)
-        # _ = self.wait_for_response(ws)
+        
+        payload = f"""#\nCreateOrgStructureFromCsv(mid: \"{mid}\", data: '{csv_string}')"""
+        ws.send(payload)
+        response = self.wait_for_response(ws)
+        status = response.get('status', 'error')
+        result = response.get('result', {})
+
+        print("response: ", response)
 
         ws.close()
-        return "Successfully!!"
+        return status, result
 
     @log_call
     def updateversion(self, version: Optional[str] = None) -> str:
