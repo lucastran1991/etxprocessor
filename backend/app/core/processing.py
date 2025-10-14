@@ -358,10 +358,9 @@ class ProcessingService:
             ws.close()
             return "error"
 
-        file_name = f"{file_name}_{timestamp}{file_extension}"
+        file_full_name = f"{file_name}_{timestamp}{file_extension}"
 
         try:
-            # file_bytes already contains content; encode directly
             base64_string = base64.b64encode(file_bytes).decode('utf-8')
         except Exception as e:
             traceback.print_exc()
@@ -369,32 +368,39 @@ class ProcessingService:
             ws.close()
             return "error"
 
-        payload = f"""#\nUploadBase64Imp:\n    mid: '{uuid.uuid4()}'\n    fileName: '{file_name}'\n    content: '{base64_string}'\n"""
+        print("file_full_name: ", file_full_name)
+        print("base64_string: ", base64_string)
+
+        payload = f"""#\nUploadBase64Imp:\n    mid: '{uuid.uuid4()}'\n    fileName: '{file_full_name}'\n    content: '{base64_string}'\n"""
         self.logger.info("Uploading base64 file")
         ws.send(payload)
-        resp = self.wait_for_response(ws) or {}
-        print("resp: ", resp)
         
+        response1 = self.wait_for_response(ws) or {}
+        status1 = response1.get('status', 'error') or "error"
+        print("response1: ", response1)
+        print("status1: ", status1)
+
         try:
-            data_file = resp.get("UploadBase64Imp", {}).get("Message", {}).get("FilePath")
+            uploaded_file_path = response1.get("UploadBase64Imp", {}).get("Message", {}).get("FilePath")
         except Exception:
             traceback.print_exc()
             self.logger.error("Cannot upload data file!")
 
-        if not data_file:
+        if not uploaded_file_path:
             ws.close()
             return "error"
 
-        ingest_payload = f"""#\nPyRequest:\n    app: etx_batch\n    value:\n        Input:\n            action: es_data_importer\n            data_file_path: \"{os.path.join(folder, data_file)}\"\n            offset: {offset}\n            nrows: {nrows}\n            tracking: true"""
+        ingest_payload = f"""#\nPyRequest:\n    app: etx_batch\n    value:\n        Input:\n            action: es_data_importer\n            data_file_path: \"{os.path.join(folder, uploaded_file_path)}\"\n            offset: {offset}\n            nrows: {nrows}\n            tracking: true"""
 
         ws.send(ingest_payload)
-        response = self.wait_for_response(ws)
-        status = response.get('status', 'error') or "error"
-
-        print("response: ", response)
+        
+        response2 = self.wait_for_response(ws)
+        status2 = response2.get('status', 'error') or "error"
+        print("status2: ", status2)
+        print("response2: ", response2)
 
         ws.close()
-        return status
+        return "Successfully!"
 
     @log_call
     def ingestbar(self, data_folder: Optional[str] = None) -> str:
@@ -462,7 +468,7 @@ class ProcessingService:
         print("response: ", response)
 
         ws.close()
-        return status
+        return "Successfully!"
 
     @log_call
     def updateversion(self, version: Optional[str] = None) -> str:

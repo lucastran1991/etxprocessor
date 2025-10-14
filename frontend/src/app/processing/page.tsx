@@ -55,7 +55,9 @@ export default function ProcessingPage() {
 
     try {
       const formData = new FormData();
-      formData.append('dataFile', selectedFile.path);
+      formData.append('data_file', selectedFile.id);
+      // formData.append('file_path', selectedFile.path);
+      // formData.append('file_id', selectedFile.id);
 
       let endpoint = '';
       switch (action) {

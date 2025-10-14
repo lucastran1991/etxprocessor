@@ -12,15 +12,15 @@ router = APIRouter()
 
 @router.post("/createorg")
 async def create_org(
-    dataFile: str = Form(...),
-    tenantName: Optional[str] = Form(None),
+    data_file: str = Form(...),
+    tenant_name: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     try:
         msg = processing_service.createorg(
-            dataFile=dataFile,
-            tenantName=tenantName,
+            data_file=data_file,
+            tenant_name=tenant_name,
             db=db,
             user=current_user,
         )
@@ -31,13 +31,14 @@ async def create_org(
 
 @router.post("/ingestes")
 async def ingest_es(
-    dataFile: Optional[str] = Form(None),
+    data_file: Optional[str] = Form(None),
     offset: int = Form(0),
     nrows: int = Form(100000),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     try:
-        msg = processing_service.ingestes(data_file=dataFile, offset=offset, nrows=nrows)
+        msg = processing_service.ingestes(data_file=data_file, offset=offset, nrows=nrows, db=db, user=current_user)
         return {"message": msg}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -45,11 +46,12 @@ async def ingest_es(
 
 @router.post("/ingestbar")
 async def ingest_bar(
-    dataFolder: Optional[str] = Form(None),
+    data_folder: Optional[str] = Form(None),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     try:
-        msg = processing_service.ingestbar(data_folder=dataFolder)
+        msg = processing_service.ingestbar(data_folder=data_folder, db=db, user=current_user)
         return {"message": msg}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
