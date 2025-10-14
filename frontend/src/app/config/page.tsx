@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { Container, Heading, VStack, Card, CardHeader, CardBody, Divider, SimpleGrid, FormControl, FormLabel, Input, Button, useToast, HStack, Textarea } from '@chakra-ui/react'
+import React, { useEffect, useRef, useState } from 'react'
+import { Container, Heading, VStack, Card, CardHeader, CardBody, Divider, SimpleGrid, FormControl, FormLabel, Input, Button, useToast, HStack } from '@chakra-ui/react'
+import { FiUpload } from 'react-icons/fi'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/services/apiClient'
@@ -27,6 +28,7 @@ export default function ConfigPage() {
   const [config, setConfig] = useState<ConfigShape>({})
   const [saving, setSaving] = useState(false)
   const [jsonText, setJsonText] = useState('')
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     if (!isLoading && !user) router.push('/login')
@@ -76,14 +78,28 @@ export default function ConfigPage() {
               <HStack spacing={4} mb={4} align="flex-start">
                 <FormControl>
                   <FormLabel>Upload JSON (etxbatch.json)</FormLabel>
-                  <Input type="file" accept="application/json,.json" onChange={(e) => {
-                    const f = e.target.files?.[0]
-                    if (f) onUploadJson(f)
-                  }} />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>JSON Preview</FormLabel>
-                  <Textarea value={jsonText} onChange={(e) => setJsonText(e.target.value)} placeholder={`{\n  "HTTPURI": "http://..."\n}`} rows={6} />
+                  <Input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/json,.json"
+                    display="none"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f) onUploadJson(f)
+                      // reset value to allow re-uploading the same file
+                      if (fileInputRef.current) fileInputRef.current.value = ''
+                    }}
+                  />
+                  <Button
+                    leftIcon={<FiUpload />}
+                    variant="outline"
+                    colorScheme="brand"
+                    bg="white"
+                    borderColor="brand.500"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Upload JSON
+                  </Button>
                 </FormControl>
               </HStack>
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
