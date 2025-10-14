@@ -103,7 +103,7 @@ export default function ConfigPage() {
                   </FormControl>
                 ))}
               </SimpleGrid>
-              <Button mt={6} colorScheme="brand" onClick={onSave} isLoading={saving}>Save</Button>
+              <Button mt={6} colorScheme="brand" onClick={onSave} isLoading={saving} w="full">Save</Button>
             </CardBody>
           </Card>
         </VStack>
