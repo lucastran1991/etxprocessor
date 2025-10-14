@@ -54,7 +54,7 @@ deploy_frontend() {
   fi
   if check_port 8888; then echo "port 8888 in use; skipping"; else
     # Unified log with [FE] tag
-    nohup npm run start -- -p 8888 2>&1 | sed -e 's/^/[FE] /' >> "$ROOT_DIR/system.log" &
+    nohup npm run start -- -H 0.0.0.0 -p 8888 2>&1 | sed -e 's/^/[FE] /' >> "$ROOT_DIR/system.log" &
     echo $! > "$ROOT_DIR/frontend.pid"
   fi
 }
