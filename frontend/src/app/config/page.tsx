@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Container, Heading, VStack, Card, CardHeader, CardBody, Divider, SimpleGrid, FormControl, FormLabel, Input, Button, useToast, HStack, Textarea } from '@chakra-ui/react'
 import Layout from '@/components/layout/Layout'
 import { useAuth } from '@/hooks/useAuth'
