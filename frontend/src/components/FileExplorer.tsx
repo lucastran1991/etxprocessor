@@ -55,6 +55,7 @@ function FileTreeItem({
   hideItemDelete,
   expandSignal,
   collapseSignal,
+  selectedPath,
 }: {
   node: FileNode
   level?: number
@@ -65,6 +66,7 @@ function FileTreeItem({
   hideItemDelete?: boolean
   expandSignal: number
   collapseSignal: number
+  selectedPath?: string | null
 }) {
   const { isOpen, onToggle, onOpen, onClose } = useDisclosure({ defaultIsOpen: level === 0 })
   const hasChildren = node.children && node.children.length > 0
@@ -76,6 +78,9 @@ function FileTreeItem({
   const fileIconColor = useColorModeValue('brand.400', 'brand.300')
   const nameColor = useColorModeValue(isFolder ? 'gray.800' : 'gray.700', 'gray.100')
   const metaColor = useColorModeValue('gray.500', 'gray.400')
+  const isSelected = !isFolder && selectedPath === node.path
+  const selectedBg = useColorModeValue('brand.50', 'whiteAlpha.100')
+  const selectedBorder = useColorModeValue('brand.300', 'brand.400')
 
   const formatFileSize = (bytes: number | undefined) => {
     if (!bytes) return ''
@@ -111,6 +116,9 @@ function FileTreeItem({
         px={2}
         pl={level * 4 + 2}
         _hover={{ bg: rowHoverBg, cursor: 'pointer' }}
+        bg={isSelected ? selectedBg : undefined}
+        borderWidth={isSelected ? '1px' : undefined}
+        borderColor={isSelected ? selectedBorder : undefined}
         borderRadius="md"
         transition="all 0.2s"
         onClick={handleClick}
@@ -227,6 +235,7 @@ function FileTreeItem({
                 hideItemDelete={hideItemDelete}
                 expandSignal={expandSignal}
                 collapseSignal={collapseSignal}
+                selectedPath={selectedPath}
               />
             ))}
           </Box>
@@ -242,6 +251,7 @@ export default function FileExplorer({ onFileSelect, onRefresh, readOnly = false
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
   const [expandSignal, setExpandSignal] = useState(0)
   const [collapseSignal, setCollapseSignal] = useState(0)
+  const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const toast = useToast()
 
   const loadFileTree = async () => {
@@ -428,12 +438,16 @@ export default function FileExplorer({ onFileSelect, onRefresh, readOnly = false
           key={node.id}
           node={node}
           onDelete={handleDelete}
-          onSelect={onFileSelect}
+          onSelect={(file) => {
+            setSelectedPath(file.path)
+            if (onFileSelect) onFileSelect(file)
+          }}
           onCreateFolder={handleCreateFolder}
           readOnly={readOnly}
           hideItemDelete={hideItemDelete}
           expandSignal={expandSignal}
           collapseSignal={collapseSignal}
+          selectedPath={selectedPath}
         />
       ))}
     </VStack>
