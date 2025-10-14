@@ -337,27 +337,44 @@ class ProcessingService:
 
     # ------------------------------- public APIs -------------------------------
     @log_call
-    def ingestes(self, data_file: Optional[str] = None, offset: int = 0, nrows: int = 100000) -> str:
+    def ingestes(
+        self, 
+        data_file: Optional[str] = None, 
+        offset: int = 0, 
+        nrows: int = 100000,
+        db: Session = None,
+        user: User = None
+    ) -> str:
+
         config = self.load_config()
         ws = self.ws_init(config)
         folder = config.get("ServerFileFolder", "")
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        fname, ext = os.path.splitext(os.path.basename(data_file or 'data.csv'))
-        file_name = f"{fname}_{timestamp}{ext}"
+
+        file_service = FileService(db)
+        file_bytes = file_service.get_file_content(data_file, str(user.id))
+        file_name, file_extension = file_service.get_file_name_and_extension(data_file, str(user.id))
+        if not file_bytes or not file_name or not file_extension:
+            ws.close()
+            return "error"
+
+        file_name = f"{file_name}_{timestamp}{file_extension}"
 
         try:
-            with open(data_file or '', 'rb') as f:
-                base64_string = base64.b64encode(f.read()).decode('utf-8')
+            # file_bytes already contains content; encode directly
+            base64_string = base64.b64encode(file_bytes).decode('utf-8')
         except Exception as e:
             traceback.print_exc()
             self.logger.error(f"An error occurred: {e}")
             ws.close()
-            return "Failed!!"
+            return "error"
 
         payload = f"""#\nUploadBase64Imp:\n    mid: '{uuid.uuid4()}'\n    fileName: '{file_name}'\n    content: '{base64_string}'\n"""
         self.logger.info("Uploading base64 file")
         ws.send(payload)
         resp = self.wait_for_response(ws) or {}
+        print("resp: ", resp)
+        
         try:
             data_file = resp.get("UploadBase64Imp", {}).get("Message", {}).get("FilePath")
         except Exception:
@@ -366,14 +383,18 @@ class ProcessingService:
 
         if not data_file:
             ws.close()
-            return "Failed!!"
+            return "error"
 
         ingest_payload = f"""#\nPyRequest:\n    app: etx_batch\n    value:\n        Input:\n            action: es_data_importer\n            data_file_path: \"{os.path.join(folder, data_file)}\"\n            offset: {offset}\n            nrows: {nrows}\n            tracking: true"""
 
         ws.send(ingest_payload)
-        _ = self.wait_for_response(ws)
+        response = self.wait_for_response(ws)
+        status = response.get('status', 'error') or "error"
+
+        print("response: ", response)
+
         ws.close()
-        return "Successfully!!"
+        return status
 
     @log_call
     def ingestbar(self, data_folder: Optional[str] = None) -> str:
@@ -391,57 +412,57 @@ class ProcessingService:
         return "Successfully!!"
 
     @log_call
-    def addtenant(self, tenantName: Optional[str] = None) -> str:
+    def addtenant(self, tenant_name: Optional[str] = None) -> str:
         config = self.load_config()
         ws = self.ws_init(config)
-        payload = f"""#\nCreateTenantAccount:\n    Name: \"{tenantName}\"\n    AutoCreateDatabase: True\n    """
+        payload = f"""#\nCreateTenantAccount:\n    Name: \"{tenant_name}\"\n    AutoCreateDatabase: True\n    """
         ws.send(payload)
         _ = self.wait_for_response(ws)
         ws.close()
-        return "Successfully!!"
+        return "Successfully!"
 
     @log_call
     def createorg(
         self,
-        dataFile: Optional[str] = None,
-        tenantName: Optional[str] = None,
+        data_file: Optional[str] = None,
+        tenant_name: Optional[str] = None,
         db: Session = None,
         user: User = None,
     ) -> str:
+
         config = self.load_config()
         ws = self.ws_init(config)
         mid = uuid.uuid4()
         file_service = FileService(db)
-        file_bytes = file_service.get_file_content(dataFile, str(user.id))
+        file_bytes = file_service.get_file_content(data_file, str(user.id))
         if not file_bytes:
             ws.close()
-            return "error", {"message": "file not found or empty"}
+            return "error"
         csv_string = file_bytes.decode("utf-8", errors="replace")
+        # Escape for embedding inside single-quoted payload: escape backslashes, single quotes, and newlines
+        csv_string = csv_string.replace('\\', r'\\').replace("'", r"\'").replace("\n", r"\n")
 
-        # df = pd.read_csv(file_path)
-        # csv_string = df.to_csv(index=False)
-        # if tenantName:
-        #     ws.send("""#\nGetOrgs:\n    mid: '1360bce9-30ce-4c86-9749-92faa7f7114f'""")
-        #     resp = self.wait_for_response(ws) or {}
-        #     dict_org = (resp.get("GetOrgs", {}) or {}).get("Orgs", {})
-        #     org_id = ''
-        #     for key, value in dict_org.items():
-        #         if value.get('name') == tenantName:
-        #             org_id = key            
-        #     setorg = f"""#\n$org = GetOrgs().Orgs.getFirst()\n$args.mid = 'm1'\n$args.id = '{org_id}' # Org Id of Tenant\nSetOrg($args)\n    """
-        #     ws.send(setorg)
-        #     _ = self.wait_for_response(ws)
+        if tenant_name:
+            ws.send("""#\nGetOrgs:\n    mid: '1360bce9-30ce-4c86-9749-92faa7f7114f'""")
+            resp = self.wait_for_response(ws) or {}
+            dict_org = (resp.get("GetOrgs", {}) or {}).get("Orgs", {})
+            org_id = ''
+            for key, value in dict_org.items():
+                if value.get('name') == tenant_name:
+                    org_id = key            
+            setorg = f"""#\n$org = GetOrgs().Orgs.getFirst()\n$args.mid = 'm1'\n$args.id = '{org_id}' # Org Id of Tenant\nSetOrg($args)\n    """
+            ws.send(setorg)
+            _ = self.wait_for_response(ws)
         
         payload = f"""#\nCreateOrgStructureFromCsv(mid: \"{mid}\", data: '{csv_string}')"""
         ws.send(payload)
         response = self.wait_for_response(ws)
-        status = response.get('status', 'error')
-        result = response.get('result', {})
+        status = response.get('status', 'error') or "error"
 
         print("response: ", response)
 
         ws.close()
-        return status, result
+        return status
 
     @log_call
     def updateversion(self, version: Optional[str] = None) -> str:
@@ -452,7 +473,7 @@ class ProcessingService:
         ws.send(payload)
         _ = self.wait_for_response(ws)
         ws.close()
-        return "Successfully!!"
+        return "Successfully!"
 
 
 # Singleton-like instance for importers

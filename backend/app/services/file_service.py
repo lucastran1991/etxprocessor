@@ -75,6 +75,35 @@ class FileService:
             return None
         return storage_service.read_file_bytes(f.file_path)
 
+    def get_file_path(self, file_id: str, user_id: str) -> Optional[str]:
+        """Return file path for a user's file_id. None if not found or is a folder."""
+        f = self.get_file_by_id(file_id, user_id)
+        if not f or f.is_folder:
+            return None
+        return f.file_path
+
+    def get_file_name_and_extension(self, file_id: str, user_id: str) -> Optional[tuple[str, str]]:
+        """Get the file base name and extension (including leading dot) for a user's file.
+        Returns (None, None) if not found or is a folder.
+        """
+        f = self.get_file_by_id(file_id, user_id)
+        if not f or f.is_folder:
+            return (None, None)
+        if not f.filename:
+            return (None, None)
+        fname, ext = os.path.splitext(os.path.basename(f.filename))
+        return (fname, ext if ext else None)
+
+    def get_file_name(self, file_id: str, user_id: str) -> Optional[str]:
+        """Get the file name for a user's file. Returns None if not found or is a folder."""
+        f = self.get_file_by_id(file_id, user_id)
+        if not f or f.is_folder:
+            return None
+        if not f.filename:
+            return None
+        fname, _ = os.path.splitext(os.path.basename(f.filename))
+        return fname or None
+    
     def ensure_folder_hierarchy(self, user_id: str, folder_path: str) -> None:
         """Ensure that all folders in the given folder_path exist for the user."""
         if not folder_path or folder_path == '/':
