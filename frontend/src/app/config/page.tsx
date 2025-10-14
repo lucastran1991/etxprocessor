@@ -75,9 +75,9 @@ export default function ConfigPage() {
             <CardHeader><Heading size="md">ETX Batch Settings</Heading></CardHeader>
             <Divider />
             <CardBody>
-              <HStack spacing={4} mb={4} align="flex-start">
+              <HStack spacing={4} mb={10} align="flex-start">
                 <FormControl>
-                  <FormLabel>Upload JSON (etxbatch.json)</FormLabel>
+                  <FormLabel>Upload JSON</FormLabel>
                   <Input
                     ref={fileInputRef}
                     type="file"
@@ -112,7 +112,7 @@ export default function ConfigPage() {
                   <FormControl key={key as string}>
                     <FormLabel>{label}</FormLabel>
                     <Input
-                      type={key?.toString()?.toLowerCase().includes('password') ? 'password' : 'text'}
+                      type='text'
                       value={(config as any)?.[key as keyof ConfigShape] ?? ''}
                       onChange={(e) => set(key as keyof ConfigShape, (key==='RowsPerFile' || key==='ImportFilePerRequest' || key==='MaxRequests') ? Number(e.target.value) : e.target.value)}
                     />
