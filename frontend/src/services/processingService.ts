@@ -11,9 +11,9 @@ async function postForm(endpointPath: string, filePath: string): Promise<Respons
 }
 
 export const processingService: Record<ActionKey, (filePath: string) => Promise<Response>> = {
-  'Import Organizations': (filePath: string) => postForm('/api/processing/createorg', filePath),
-  'Import Emission Sources': (filePath: string) => postForm('/api/processing/ingestes', filePath),
-  'Load BAR Data': (filePath: string) => postForm('/api/processing/ingestbar', filePath),
+  'Import Organizations': (filePath: string) => postForm('/processing/createorg', filePath),
+  'Import Emission Sources': (filePath: string) => postForm('/processing/ingestes', filePath),
+  'Load BAR Data': (filePath: string) => postForm('/processing/ingestbar', filePath),
 }
 
 

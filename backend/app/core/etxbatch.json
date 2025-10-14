@@ -3,7 +3,7 @@
     "WSURI": "ws://ctxdev.atomiton.com:8081",
     "email": "ltran@atomiton.com",
     "password": "test@123",
-    "ServerFileFolder": "/Users/baseerkhan/code/workspace/atomiton/runtime2/sustainability/server/spaces/csv/spnData",
+    "ServerFileFolder": "/Users/mac/studio/astackops/cli/data",
     "RowsPerFile": 25,
     "ImportFilePerRequest": 1,
     "MaxRequests": 2,

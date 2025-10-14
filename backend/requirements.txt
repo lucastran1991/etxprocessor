@@ -10,3 +10,6 @@ boto3
 pydantic
 pydantic-settings
 email-validator
+requests
+pandas
+websocket-client

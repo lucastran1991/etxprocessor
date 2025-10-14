@@ -22,6 +22,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import FileExplorer from '@/components/FileExplorer'
 import { processingService } from '../../services/processingService'
+import { apiClient } from '@/services/apiClient'
 
 interface FileNode {
   id: string
@@ -38,6 +39,7 @@ export default function ProcessingPage() {
   const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null)
   const [action, setAction] = useState<string>('Import Organizations')
+  const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -53,36 +55,38 @@ export default function ProcessingPage() {
 
     try {
       const formData = new FormData();
-      formData.append('file_path', selectedFile.path);
-      
+      formData.append('dataFile', selectedFile.path);
+
       let endpoint = '';
       switch (action) {
         case 'Import Organizations':
-          endpoint = '/api/processing/createorg';
+          endpoint = '/processing/createorg';
           break;
         case 'Import Emission Sources':
-          endpoint = '/api/processing/ingestes';
+          endpoint = '/processing/ingestes';
           break;
         case 'Load BAR Data':
-          endpoint = '/api/processing/ingestbar';
+          endpoint = '/processing/ingestbar';
           break;
         default:
           return;
       }
 
-      const response = await processingService[action](selectedFile.path)
-      console.log('response', response)
-
-      if (!response.ok) {
-        throw new Error(`Processing failed: ${response.statusText}`);
-      }
-
-      const result = await response.json();
+      setIsProcessing(true)
+      const response = await apiClient.post(endpoint, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      const result = response.data;
       alert(`Processing completed successfully!\n${result.message || ''}`);
 
     } catch (error) {
+      setIsProcessing(false)
       console.error('Processing error:', error);
       alert(`Processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsProcessing(false)
     }
   };
 
