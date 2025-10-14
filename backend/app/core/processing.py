@@ -7,11 +7,84 @@ import uuid
 import logging
 import traceback
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+import time
 
 import pandas as pd
 import requests
 import websocket
+
+
+def _safe_repr(value: Any, maxlen: int = 200) -> str:
+    try:
+        text = repr(value)
+    except Exception:
+        return f"<unrepr {type(value).__name__}>"
+    if len(text) > maxlen:
+        return text[:maxlen] + "…"
+    return text
+
+
+_REDACT_KEYS = {"password", "api_key", "apikey", "token", "authorization", "secret"}
+
+
+def _redact_mapping(m: Dict[str, Any]) -> Dict[str, Any]:
+    redacted: Dict[str, Any] = {}
+    for k, v in m.items():
+        if isinstance(k, str) and k.lower() in _REDACT_KEYS:
+            redacted[k] = "***"
+        else:
+            redacted[k] = v
+    return redacted
+
+
+def log_call(fn):
+    """Decorator to log entry/exit, args, duration and exceptions for processing methods."""
+    def wrapper(*args, **kwargs):
+        # Resolve logger: prefer instance logger if first arg looks like self with .logger
+        logger = None
+        if args:
+            maybe_self = args[0]
+            logger = getattr(maybe_self, "logger", None)
+        if logger is None:
+            logger = logging.getLogger("processing")
+
+        # Prepare a readable, redacted args/kwargs representation
+        def arg_summaries(a_tuple: Tuple[Any, ...], kw: Dict[str, Any]) -> str:
+            parts: List[str] = []
+            for i, a in enumerate(a_tuple):
+                if i == 0 and hasattr(a, fn.__name__):  # skip self in print
+                    parts.append("self")
+                else:
+                    parts.append(_safe_repr(a))
+            if kw:
+                red_kw = _redact_mapping(kw)
+                parts.append("kwargs=" + _safe_repr(red_kw))
+            return ", ".join(parts)
+
+        start = time.perf_counter()
+        logger.info(f"CALL {fn.__name__}({arg_summaries(args, kwargs)})")
+        try:
+            result = fn(*args, **kwargs)
+            elapsed_ms = int((time.perf_counter() - start) * 1000)
+            # Summarize result without dumping huge payloads
+            summary = None
+            if isinstance(result, (str, bytes)):
+                summary = f"{type(result).__name__}[len={len(result)}]"
+            elif hasattr(result, "shape"):
+                summary = f"{type(result).__name__}[shape={getattr(result, 'shape', None)}]"
+            elif isinstance(result, (list, tuple, dict)):
+                summary = f"{type(result).__name__}[len={len(result)}]"
+            else:
+                summary = type(result).__name__
+            logger.info(f"RETURN {fn.__name__} -> {summary} in {elapsed_ms} ms")
+            return result
+        except Exception:
+            elapsed_ms = int((time.perf_counter() - start) * 1000)
+            logger.exception(f"EXCEPTION in {fn.__name__} after {elapsed_ms} ms")
+            raise
+
+    return wrapper
 
 
 class ProcessingService:
@@ -34,11 +107,13 @@ class ProcessingService:
         self.ess_df: Optional[pd.DataFrame] = None
 
     # ----------------------------- basic utilities -----------------------------
+    @log_call
     def load_config(self) -> Dict[str, Any]:
         config_path = os.path.join(os.path.dirname(__file__), 'etxbatch.json')
         with open(config_path) as f:
             return json.load(f)
 
+    @log_call
     def login(self, http_uri: str, email: str, password: str) -> Dict[str, Any]:
         url = f"{http_uri}/fid-auth"
         payload = {"login": {"email": email, "password": password}}
@@ -47,10 +122,12 @@ class ProcessingService:
             raise RuntimeError("Failed to log in")
         return resp.json().get('login', {})
 
+    @log_call
     def connect_websocket(self, ws_uri: str) -> websocket.WebSocket:
         ws = websocket.create_connection(ws_uri, timeout=30)
         return ws
 
+    @log_call
     def wait_for_response(self, ws: websocket.WebSocket) -> Optional[Dict[str, Any]]:
         try:
             return json.loads(ws.recv())
@@ -60,6 +137,7 @@ class ProcessingService:
             return None
 
     # ----------------------------- high level flows ----------------------------
+    @log_call
     def ws_init(self, config: Dict[str, Any]) -> websocket.WebSocket:
         http_uri = config['HTTPURI']
         ws_uri = config['WSURI']
@@ -78,6 +156,7 @@ class ProcessingService:
         return ws
 
     @staticmethod
+    @log_call
     def build_set_org(mid: Optional[str] = None) -> str:
         lines: List[str] = []
         lines.append("#")
@@ -89,6 +168,7 @@ class ProcessingService:
         return "\n".join(lines)
 
     # ----------------------------- csv utilities ------------------------------
+    @log_call
     def check_csv(self, file_name: str) -> List[List[str]]:
         if not os.path.isfile(file_name):
             raise FileNotFoundError(f"File not found: {file_name}")
@@ -102,11 +182,13 @@ class ProcessingService:
                 raise ValueError("CSV format is incorrect: inconsistent columns")
             return rows
 
+    @log_call
     def create_temp_folder(self) -> str:
         tmp = 'etxtemp'
         os.makedirs(tmp, exist_ok=True)
         return tmp
 
+    @log_call
     def split_csv(self, rows: List[List[str]], temp_folder: str, rows_per_file: int) -> List[str]:
         file_names: List[str] = []
         header = rows[0]
@@ -121,6 +203,7 @@ class ProcessingService:
         return file_names
 
     # ------------------------------- http utils -------------------------------
+    @log_call
     def ext_request(self, method: str, api_name: str, headers: Optional[Dict[str, str]] = None, data: Any = None) -> requests.Response:
         config = self.load_config()
         uri = config.get("HTTPURI", "")
@@ -132,6 +215,7 @@ class ProcessingService:
         headers.update({'DTX-DS-KEY': api_key})
         return requests.request(method, url, headers=headers, data=data, timeout=60)
 
+    @log_call
     def get_all_es(self) -> pd.DataFrame:
         response = self.ext_request(method="GET", api_name="GetAllESs", data="")
         es_json = response.json()
@@ -139,6 +223,7 @@ class ProcessingService:
         self.logger.info(df)
         return df
 
+    @log_call
     def publish_bar_data(self, es_id: str, bar_name: str, csv_data: str) -> bool:
         payload = json.dumps({"esId": es_id, "bartName": bar_name, "data": {"csv": csv_data}})
         self.logger.info("Publishing BAR data")
@@ -162,6 +247,7 @@ class ProcessingService:
         return True
 
     # ------------------------------ processing --------------------------------
+    @log_call
     def process_csv_file(self, file_path: str) -> None:
         if self.ess_df is None:
             raise RuntimeError("ESS dataframe not loaded")
@@ -197,6 +283,7 @@ class ProcessingService:
         else:
             self.logger.info("File is invalid")
 
+    @log_call
     def process_folder(self, data_folder: str) -> bool:
         for root, _dirs, files in os.walk(data_folder):
             for file in files:
@@ -205,6 +292,7 @@ class ProcessingService:
         return True
 
     # ------------------------------- public APIs -------------------------------
+    @log_call
     def ingestes(self, data_file: Optional[str] = None, offset: int = 0, nrows: int = 100000) -> str:
         config = self.load_config()
         ws = self.ws_init(config)
@@ -243,6 +331,7 @@ class ProcessingService:
         ws.close()
         return "Successfully!!"
 
+    @log_call
     def ingestbar(self, data_folder: Optional[str] = None) -> str:
         config = self.load_config()
         folder = config.get("ServerFileFolder", "")
@@ -257,6 +346,7 @@ class ProcessingService:
         self.logger.info(f"End Time: {end_time}")
         return "Successfully!!"
 
+    @log_call
     def addtenant(self, tenantName: Optional[str] = None) -> str:
         config = self.load_config()
         ws = self.ws_init(config)
@@ -266,6 +356,7 @@ class ProcessingService:
         ws.close()
         return "Successfully!!"
 
+    @log_call
     def createorg(self, dataFile: Optional[str] = None, tenantName: Optional[str] = None) -> str:
         config = self.load_config()
         ws = self.ws_init(config)
@@ -288,6 +379,7 @@ class ProcessingService:
         ws.close()
         return "Successfully!!"
 
+    @log_call
     def updateversion(self, version: Optional[str] = None) -> str:
         config = self.load_config()
         ws = self.ws_init(config)
