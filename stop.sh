@@ -76,7 +76,7 @@ main() {
     
     # Stop services by PID files
     stop_service "Backend" "backend.pid" "8000"
-    stop_service "Frontend" "frontend.pid" "3000"
+    stop_service "Frontend" "frontend.pid" "8888"
     
     # Stop any remaining processes
     stop_uvicorn

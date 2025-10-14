@@ -63,8 +63,8 @@ start_backend() {
 start_frontend() {
     echo -e "${BLUE}🎨 Starting Frontend...${NC}"
     
-    if check_port 3000; then
-        echo -e "${YELLOW}⚠️  Port 3000 is already in use. Frontend might already be running.${NC}"
+    if check_port 8888; then
+        echo -e "${YELLOW}⚠️  Port 8888 is already in use. Frontend might already be running.${NC}"
     else
         cd frontend
         
@@ -82,7 +82,7 @@ start_frontend() {
         echo $! > ../frontend.pid
         
         cd ..
-        echo -e "${GREEN}✅ Frontend started successfully on http://localhost:3000${NC}"
+        echo -e "${GREEN}✅ Frontend started successfully on http://localhost:8888${NC}"
     fi
 }
 
@@ -105,7 +105,7 @@ wait_for_services() {
     
     # Wait for frontend
     for i in {1..30}; do
-        if curl -s http://localhost:3000 > /dev/null 2>&1; then
+        if curl -s http://localhost:8888 > /dev/null 2>&1; then
             echo -e "${GREEN}✅ Frontend is ready${NC}"
             break
         fi
@@ -138,7 +138,7 @@ main() {
     echo -e "${GREEN}🎉 ETX Processor is now running!${NC}"
     echo -e "${GREEN}================================${NC}"
     echo -e "${BLUE}Backend API:  http://127.0.0.1:8000${NC}"
-    echo -e "${BLUE}Frontend UI:  http://localhost:3000${NC}"
+    echo -e "${BLUE}Frontend UI:  http://localhost:8888${NC}"
     echo -e "${BLUE}API Docs:     http://127.0.0.1:8000/docs${NC}"
     echo ""
     echo -e "${YELLOW}📝 Logs:${NC}"

@@ -228,7 +228,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "3000:3000"
+      - "8888:8888"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
   

@@ -13,7 +13,7 @@ Starts both the backend and frontend services.
 - Runs database migrations
 - Starts FastAPI server on port 8000
 - Installs frontend dependencies
-- Starts Next.js development server on port 3000
+- Starts Next.js development server on port 8888
 - Waits for both services to be ready
 - Shows service URLs and helpful information
 
@@ -27,7 +27,7 @@ Stops both the backend and frontend services.
 
 **What it does:**
 - Stops processes using PID files
-- Kills any processes using ports 8000 and 3000
+- Kills any processes using ports 8000 and 8888
 - Cleans up stale PID files
 - Shows log file locations
 
@@ -70,7 +70,7 @@ Shows the current status of both services.
 When running, the services are available at:
 
 - **Backend API**: http://127.0.0.1:8000
-- **Frontend UI**: http://localhost:3000
+- **Frontend UI**: http://localhost:8888
 - **API Documentation**: http://127.0.0.1:8000/docs
 
 ## Log Files

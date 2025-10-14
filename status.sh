@@ -106,7 +106,7 @@ main() {
     check_service "Backend" "8000" "http://127.0.0.1:8000/health" "backend.pid"
     
     # Check frontend
-    check_service "Frontend" "3000" "http://localhost:3000" "frontend.pid"
+    check_service "Frontend" "8888" "http://localhost:8888" "frontend.pid"
     
     # Show process information
     show_processes
@@ -123,14 +123,14 @@ main() {
         backend_running=true
     fi
     
-    if curl -s "http://localhost:3000" > /dev/null 2>&1; then
+    if curl -s "http://localhost:8888" > /dev/null 2>&1; then
         frontend_running=true
     fi
     
     if [ "$backend_running" = true ] && [ "$frontend_running" = true ]; then
         echo -e "  ${GREEN}🎉 All services are running!${NC}"
         echo -e "  ${GREEN}   Backend:  http://127.0.0.1:8000${NC}"
-        echo -e "  ${GREEN}   Frontend: http://localhost:3000${NC}"
+        echo -e "  ${GREEN}   Frontend: http://localhost:8888${NC}"
     elif [ "$backend_running" = true ]; then
         echo -e "  ${YELLOW}⚠️  Backend is running, but frontend is not${NC}"
     elif [ "$frontend_running" = true ]; then

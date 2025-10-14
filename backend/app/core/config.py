@@ -15,11 +15,14 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:8888", "http://localhost:8000"]
     
     # Storage Configuration
     STORAGE_TYPE: str = "local"  # "local" or "s3"
     LOCAL_UPLOAD_DIR: str = "uploads"  # Directory for local file storage
+    # Avatar assets
+    AVATAR_SOURCE_DIR: str = "avatar"  # Directory containing seed avatars (relative to backend working dir)
+    AVATAR_UPLOAD_SUBDIR: str = "avatars"  # Subdirectory under LOCAL_UPLOAD_DIR where avatars are served
     
     # AWS S3 (only used when STORAGE_TYPE="s3")
     AWS_ACCESS_KEY_ID: Optional[str] = None

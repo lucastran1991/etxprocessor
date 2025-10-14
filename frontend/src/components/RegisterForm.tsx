@@ -11,7 +11,8 @@ import {
   Alert,
   AlertIcon,
   Checkbox,
-  Text
+  Text,
+  Select
 } from '@chakra-ui/react'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '@/hooks/useAuth'
@@ -23,6 +24,8 @@ interface RegisterFormData {
   password: string
   confirmPassword: string
   terms: boolean
+  role: string
+  avatar?: string
 }
 
 export default function RegisterForm() {
@@ -37,12 +40,24 @@ export default function RegisterForm() {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
     setError('')
+
+    // Generate a random number between 1 and 8 (assuming there are 8 avatars)
+    const randomAvatarNumber = Math.floor(Math.random() * 8) + 1
+    data.avatar = `/avatars/avatar${randomAvatarNumber}.png`
     
     try {
-      await registerUser(data.username, data.email, data.password)
+      if (!data.terms) {
+        setError('You must accept the terms and conditions')
+        return
+      }
+      await registerUser(data.username, data.email, data.password, data.role, data.avatar)
       router.push('/login')
     } catch (err) {
-      setError('Registration failed. Please try again.')
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Registration failed. Please try again.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -92,6 +107,28 @@ export default function RegisterForm() {
                 {errors.email.message}
               </Text>
             )}
+          </FormControl>
+
+          <FormControl>
+            <FormLabel>Role</FormLabel>
+            <Select defaultValue="user" {...register('role')}>
+              <option value="nguoi-qua-duong">Người qua đường</option>
+              <option value="devops">Devops</option>
+              <option value="backend">Backend</option>
+              <option value="frontend">Frontend</option>
+              <option value="qa">QA</option>
+              <option value="di-tre">Đi trễ</option>
+              <option value="ve-som">Về sớm</option>
+              <option value="bao-hai-team">Báo hại team</option>
+              <option value="nguoi-yeu-meo">Người yêu mèo nhưng chỉ nuôi chó</option>
+              <option value="nguoi-choc-cho">Người chọc chó</option>
+              <option value="cho">Chó</option>
+              <option value="dan-choi-exciter">Dân chơi Exciter</option>
+              <option value="phong-lon-club">Phóng lợn club 1h sáng quảng trường 2/9</option>
+              <option value="nguoi-an-kem">Người ăn kem nhưng mãi không trúng thưởng</option>
+              <option value="mukbang">Dân chơi mukbang đồ Office</option>
+              <option value="admin">Admin</option>
+            </Select>
           </FormControl>
 
           <FormControl isInvalid={!!errors.password}>

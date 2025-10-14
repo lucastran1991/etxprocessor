@@ -3,6 +3,9 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 from app.core.security import get_password_hash, verify_password
 from typing import Optional, List
+import os
+import random
+from app.core.config import settings
 
 class UserService:
     def __init__(self, db: Session):
@@ -19,11 +22,30 @@ class UserService:
 
     def create_user(self, user_data: UserCreate) -> User:
         hashed_password = get_password_hash(user_data.password)
+        # Assign a default avatar from uploads/avatars if none provided
+        default_avatar_url = None
+        try:
+            if settings.STORAGE_TYPE == "local":
+                avatars_dir = os.path.join(settings.LOCAL_UPLOAD_DIR, settings.AVATAR_UPLOAD_SUBDIR)
+                if os.path.isdir(avatars_dir):
+                    candidates = [
+                        f for f in os.listdir(avatars_dir)
+                        if os.path.isfile(os.path.join(avatars_dir, f)) and f.lower().split('.')[-1] in {"jpg","jpeg","png","webp"}
+                    ]
+                    if candidates:
+                        chosen = random.choice(candidates)
+                        # Public URL path under /uploads
+                        default_avatar_url = f"/uploads/{settings.AVATAR_UPLOAD_SUBDIR}/{chosen}"
+        except Exception:
+            # Non-fatal; leave as None if any error occurs
+            default_avatar_url = None
+
         db_user = User(
             username=user_data.username,
             email=user_data.email,
             password=hashed_password,
-            role=user_data.role or 'user'
+            role=user_data.role or 'user',
+            avatar_url=default_avatar_url
         )
         self.db.add(db_user)
         self.db.commit()
