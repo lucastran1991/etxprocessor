@@ -19,6 +19,11 @@ check_port() {
   if lsof -Pi :$1 -sTCP:LISTEN -t >/dev/null ; then return 0; else return 1; fi
 }
 
+if [[ $FORCE -eq 1 && -f .env.production ]]; then
+  echo "Forcing .env.local update from .env.production"
+  cp .env.production .env.local
+fi
+
 kill_port() {
   local PORT=$1
   if lsof -Pi :$PORT -sTCP:LISTEN -t >/dev/null ; then

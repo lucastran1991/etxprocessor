@@ -112,11 +112,11 @@ export default function RegisterForm() {
           <FormControl>
             <FormLabel>Role</FormLabel>
             <Select defaultValue="user" {...register('role')}>
-              <option value="nguoi-qua-duong">Người qua đường</option>
               <option value="devops">Devops</option>
               <option value="backend">Backend</option>
               <option value="frontend">Frontend</option>
               <option value="qa">QA</option>
+              <option value="nguoi-qua-duong">Người qua đường</option>
               <option value="di-tre">Đi trễ</option>
               <option value="ve-som">Về sớm</option>
               <option value="bao-hai-team">Báo hại team</option>
@@ -127,7 +127,7 @@ export default function RegisterForm() {
               <option value="phong-lon-club">Phóng lợn club 1h sáng quảng trường 2/9</option>
               <option value="nguoi-an-kem">Người ăn kem nhưng mãi không trúng thưởng</option>
               <option value="mukbang">Dân chơi mukbang đồ Office</option>
-              <option value="admin">Admin</option>
+              {/* <option value="admin">Admin</option> */}
             </Select>
           </FormControl>
 
