@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Container, Heading, VStack, Card, CardHeader, CardBody, Divider, SimpleGrid, FormControl, FormLabel, Input, Button, useToast } from '@chakra-ui/react'
+import { Container, Heading, VStack, Card, CardHeader, CardBody, Divider, SimpleGrid, FormControl, FormLabel, Input, Button, useToast, HStack, Textarea } from '@chakra-ui/react'
 import Layout from '@/components/layout/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
@@ -27,6 +27,7 @@ export default function ConfigPage() {
   const toast = useToast()
   const [config, setConfig] = useState<ConfigShape>({})
   const [saving, setSaving] = useState(false)
+  const [jsonText, setJsonText] = useState('')
 
   useEffect(() => {
     if (!isLoading && !user) router.push('/login')
@@ -51,6 +52,19 @@ export default function ConfigPage() {
     }
   }
 
+  const onUploadJson = async (file: File) => {
+    try {
+      const text = await file.text()
+      setJsonText(text)
+      const parsed = JSON.parse(text)
+      if (typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('JSON must be an object')
+      setConfig((prev) => ({ ...prev, ...(parsed as any) }))
+      toast({ title: 'JSON loaded', status: 'success', duration: 2000, isClosable: true })
+    } catch (e: any) {
+      toast({ title: 'Invalid JSON', description: e?.message || 'Parse error', status: 'error', duration: 3000, isClosable: true })
+    }
+  }
+
   return (
     <Layout>
       <Container maxW="container.lg" py={8}>
@@ -60,6 +74,19 @@ export default function ConfigPage() {
             <CardHeader><Heading size="md">ETX Batch Settings</Heading></CardHeader>
             <Divider />
             <CardBody>
+              <HStack spacing={4} mb={4} align="flex-start">
+                <FormControl>
+                  <FormLabel>Upload JSON (etxbatch.json)</FormLabel>
+                  <Input type="file" accept="application/json,.json" onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) onUploadJson(f)
+                  }} />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>JSON Preview</FormLabel>
+                  <Textarea value={jsonText} onChange={(e) => setJsonText(e.target.value)} placeholder="{\n  \"HTTPURI\": \"http://...\"\n}" rows={6} />
+                </FormControl>
+              </HStack>
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                 {[
                   ['HTTPURI','HTTP URI'],['WSURI','WS URI'],['email','Email'],['password','Password'],
