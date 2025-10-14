@@ -1,23 +1,8 @@
 import axios from 'axios'
 import Cookies from 'js-cookie'
+import { resolveApiBaseUrl } from '@/utils/apiBase'
 
-function resolveApiUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_API_URL
-  if (explicit && explicit.trim().length > 0) return explicit
-
-  if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol || 'http:'
-    const host = window.location.hostname
-    // Default backend port in our stack
-    const backendPort = '8000'
-    return `${protocol}//${host}:${backendPort}`
-  }
-
-  // Fallback for SSR/build-time
-  return 'http://localhost:8000'
-}
-
-const API_URL = resolveApiUrl()
+const API_URL = resolveApiBaseUrl()
 
 export const apiClient = axios.create({
   baseURL: `${API_URL}/api/v1`,
