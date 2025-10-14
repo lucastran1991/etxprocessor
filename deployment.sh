@@ -48,6 +48,10 @@ deploy_frontend() {
   echo "-- frontend"
   cd "$FRONTEND_DIR"
   npm install --silent
+  # Prepare production env file for Next.js build
+  API_URL_FOR_BUILD="${NEXT_PUBLIC_API_URL:-http://veoliaint.atomiton.com:8000}"
+  echo "Using NEXT_PUBLIC_API_URL=$API_URL_FOR_BUILD"
+  echo "NEXT_PUBLIC_API_URL=$API_URL_FOR_BUILD" > .env.production
   npm run build
   if check_port 8888; then
     if [[ $FORCE -eq 1 ]]; then kill_port 8888; sleep 1; fi
