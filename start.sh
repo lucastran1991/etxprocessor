@@ -77,8 +77,8 @@ start_frontend() {
         npm install
         
         echo -e "${BLUE}🔧 Starting Next.js development server...${NC}"
-        # Write to unified system.log with [FE] tag
-        nohup npm run dev 2>&1 | sed -e 's/^/[FE] /' >> ../system.log &
+        # Write to unified system.log with [FE] tag and bind to port 8888
+        nohup env PORT=8888 npm run dev 2>&1 | sed -e 's/^/[FE] /' >> ../system.log &
         echo $! > ../frontend.pid
         
         cd ..
