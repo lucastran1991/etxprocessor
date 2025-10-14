@@ -42,7 +42,7 @@ function formatBytes(bytes?: number) {
 }
 
 function isImage(mime?: string | null, name?: string) {
-  if (!mime && name) return /\.(png|jpe?g|gif|webp)$/i.test(name)
+  if (!mime && name) return /(\.(png|jpe?g|gif|webp))$/i.test(name)
   return !!mime && mime.startsWith('image/')
 }
 
@@ -52,12 +52,18 @@ function isPdf(mime?: string | null, name?: string) {
 }
 
 function isCsv(mime?: string | null, name?: string) {
-  if (!mime && name) return /\.(csv)$/i.test(name)
+  if (!mime && name) return /\.csv$/i.test(name)
   return mime === 'text/csv' || mime === 'application/vnd.ms-excel'
+}
+
+function isJson(mime?: string | null, name?: string) {
+  if (!mime && name) return /\.json$/i.test(name)
+  return mime === 'application/json'
 }
 
 export default function FilePreview({ file }: { file: FileNodeLike | null }) {
   const [csvRows, setCsvRows] = useState<string[][] | null>(null)
+  const [jsonText, setJsonText] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -69,8 +75,10 @@ export default function FilePreview({ file }: { file: FileNodeLike | null }) {
     return getImageUrl(file.path)
   }, [file])
 
+  // CSV loader
   useEffect(() => {
     setCsvRows(null)
+    setJsonText(null)
     setError(null)
     if (!file || !url) return
     if (!isCsv(file.mime_type, file.name)) return
@@ -95,6 +103,36 @@ export default function FilePreview({ file }: { file: FileNodeLike | null }) {
       }
     }
     fetchCsv()
+    return () => controller.abort()
+  }, [file, url])
+
+  // JSON loader
+  useEffect(() => {
+    setJsonText(null)
+    if (!file || !url) return
+    if (!isJson(file.mime_type, file.name)) return
+
+    const controller = new AbortController()
+    const fetchJson = async () => {
+      setLoading(true)
+      try {
+        const res = await fetch(url, { signal: controller.signal })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const text = await res.text()
+        try {
+          const parsed = JSON.parse(text)
+          const pretty = JSON.stringify(parsed, null, 2)
+          setJsonText(pretty.length > 100_000 ? pretty.slice(0, 100_000) + '\n... (truncated) ...' : pretty)
+        } catch {
+          setJsonText(text.length > 100_000 ? text.slice(0, 100_000) + '\n... (truncated) ...' : text)
+        }
+      } catch (e: any) {
+        if (e.name !== 'AbortError') setError('Failed to load JSON preview')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchJson()
     return () => controller.abort()
   }, [file, url])
 
@@ -149,7 +187,7 @@ export default function FilePreview({ file }: { file: FileNodeLike | null }) {
             {error && <Text color="red.500">{error}</Text>}
             {!loading && csvRows && csvRows.length > 0 && (
               <Box overflowX="auto" maxW="100%">
-                <Table size="sm" variant="striped" sx={{ tableLayout: "fixed" }}>
+                <Table size="sm" variant="striped" sx={{ tableLayout: 'fixed' }}>
                   <Thead>
                     <Tr>
                       {csvRows[0].map((h, i) => (
@@ -175,7 +213,26 @@ export default function FilePreview({ file }: { file: FileNodeLike | null }) {
           </Box>
         )}
 
-        {!isImage(file.mime_type, file.name) && !isPdf(file.mime_type, file.name) && !isCsv(file.mime_type, file.name) && (
+        {isJson(file.mime_type, file.name) && (
+          <Box>
+            {loading && (
+              <HStack>
+                <Spinner size="sm" />
+                <Text>Loading JSON preview…</Text>
+              </HStack>
+            )}
+            {error && <Text color="red.500">{error}</Text>}
+            {!loading && jsonText && (
+              <Box bg={previewBg} p={3} borderRadius="md" overflowX="auto">
+                <Box as="pre" fontSize="sm" whiteSpace="pre" fontFamily="mono" maxW="100%">
+                  {jsonText}
+                </Box>
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {!isImage(file.mime_type, file.name) && !isPdf(file.mime_type, file.name) && !isCsv(file.mime_type, file.name) && !isJson(file.mime_type, file.name) && (
           <Text color="gray.500">No preview available for this file type.</Text>
         )}
       </CardBody>
