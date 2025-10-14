@@ -15,7 +15,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:8888", "http://localhost:8000"]
+    BACKEND_CORS_ORIGINS: List[str] = [
+        "http://localhost:8888",
+        "http://localhost:8000",
+        "http://veoliaint.atomiton.com",
+        "http://veoliaint.atomiton.com:8888",
+    ]
     
     # Storage Configuration
     STORAGE_TYPE: str = "local"  # "local" or "s3"
