@@ -70,6 +70,6 @@ deploy_frontend
 
 echo "==> Deployment complete"
 echo "API:      http://0.0.0.0:8000"
-echo "Frontend: http3000.0.0.0:8888"
+echo "Frontend: http://0.0.0.0:8888"
 
 
