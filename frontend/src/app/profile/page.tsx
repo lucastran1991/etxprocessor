@@ -143,22 +143,24 @@ export default function Profile() {
                   </Badge>
                 </VStack>
 
-                <VStack spacing={4} width="100%" maxW="md">
-                  <HStack justifyContent="space-between" width="100%">
-                    <Text fontWeight="bold">Level:</Text>
-                    <Text>{user.level}</Text>
-                  </HStack>
-                  <HStack justifyContent="space-between" width="100%">
-                    <Text fontWeight="bold">Experience:</Text>
-                    <Text>{user.exp} / {user.level * 100}</Text>
-                  </HStack>
-                  <Progress 
-                    value={getExpProgress(user.exp, user.level)} 
-                    size="lg" 
-                    colorScheme="brand" 
-                    width="100%" 
-                  />
-                </VStack>
+                {/*
+                  <VStack spacing={4} width="100%" maxW="md">
+                    <HStack justifyContent="space-between" width="100%">
+                      <Text fontWeight="bold">Level:</Text>
+                      <Text>{user.level}</Text>
+                    </HStack>
+                    <HStack justifyContent="space-between" width="100%">
+                      <Text fontWeight="bold">Experience:</Text>
+                      <Text>{user.exp} / {user.level * 100}</Text>
+                    </HStack>
+                    <Progress 
+                      value={getExpProgress(user.exp, user.level)} 
+                      size="lg" 
+                      colorScheme="brand" 
+                      width="100%" 
+                    />
+                  </VStack>
+                  */}
 
                 <Divider />
 

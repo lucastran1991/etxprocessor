@@ -8,6 +8,8 @@ import traceback
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 import time
+
+from urllib3 import response
 from app.services.file_service import FileService
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
@@ -424,12 +426,12 @@ class ProcessingService:
             }
         )
         self.logger.info("Uploading base64 file")
+        print("[ProcessingService] [ingestes] payload: ", payload)
         ws.send(payload)
-
         response1 = self.wait_for_response(ws) or {}
         status1 = response1.get("status", "error") or "error"
-        print("response1: ", response1)
-        print("status1: ", status1)
+        print("[ProcessingService] [ingestes] response: ", response1)
+        print("[ProcessingService] [ingestes] status: ", status1)
 
         try:
             uploaded_file_path = (
@@ -460,12 +462,12 @@ class ProcessingService:
             }
         )
 
+        print("[ProcessingService] [ingestes] ingest_payload: ", ingest_payload)
         ws.send(ingest_payload)
-
         response2 = self.wait_for_response(ws)
         status2 = response2.get("status", "error") or "error"
-        print("status2: ", status2)
-        print("response2: ", response2)
+        print("[ProcessingService] [ingestes] status: ", status2)
+        print("[ProcessingService] [ingestes] response: ", response2)
 
         ws.close()
         return "Successfully!"
@@ -492,8 +494,14 @@ class ProcessingService:
         payload = json.dumps(
             {"CreateTenantAccount": {"Name": tenant_name, "AutoCreateDatabase": True}}
         )
+
+        print("[ProcessingService] [addtenant] payload: ", payload)
         ws.send(payload)
-        _ = self.wait_for_response(ws)
+        response = self.wait_for_response(ws)
+        status = response.get("status", "error") or "error"
+        print("[ProcessingService] [addtenant] status: ", status)
+        print("[ProcessingService] [addtenant] response: ", response)
+
         ws.close()
         return "Successfully!"
 
@@ -520,6 +528,7 @@ class ProcessingService:
 
         if tenant_name:
             payload = json.dumps({"GetOrgs": {"mid": mid}})
+            print("[ProcessingService] [createorg] payload: ", payload)
             ws.send(payload)
             resp = self.wait_for_response(ws) or {}
             dict_org = (resp.get("GetOrgs", {}) or {}).get("Orgs", {})
@@ -528,6 +537,7 @@ class ProcessingService:
                 if value.get("name") == tenant_name:
                     org_id = key
             setorg = json.dumps({"SetOrg": {"mid": mid, "id": org_id}})
+            print("[ProcessingService] [createorg] setorg: ", setorg)
             ws.send(setorg)
             _ = self.wait_for_response(ws)
 
@@ -535,13 +545,12 @@ class ProcessingService:
             {"CreateOrgStructureFromCsv": {"mid": mid, "data": csv_string}}
         )
 
-        print("[createorg] payload: ", payload)
-        
+        print("[ProcessingService] [createorg] payload: ", payload)        
         ws.send(payload)
         response = self.wait_for_response(ws)
         status = response.get("status", "error") or "error"
-
-        print("response: ", response)
+        print("[ProcessingService] [createorg] status: ", status)
+        print("[ProcessingService] [createorg] response: ", response)
 
         ws.close()
         return "Successfully!"
@@ -563,13 +572,19 @@ class ProcessingService:
                 }
             }
         )
+
+        print("[ProcessingService] [updateversion] payload: ", payload)
         ws.send(payload)
-        _ = self.wait_for_response(ws)
+        response = self.wait_for_response(ws)
+        status = response.get("status", "error") or "error"
+        print("[ProcessingService] [updateversion] status: ", status)
+        print("[ProcessingService] [updateversion] response: ", response)
+
         ws.close()
         return "Successfully!"
 
     @log_call
-    def generate_scheme_org(self, mid: Optional[str] = str(uuid.uuid4())) -> str:
+    def generateschemeorg(self, db: Session = None, user: User = None, mid: Optional[str] = str(uuid.uuid4())) -> str:
         config = self.load_config()
         ws = self.ws_init(config)
         payload = json.dumps(
@@ -579,16 +594,21 @@ class ProcessingService:
                     "value": {
                         "Input": {
                             "mid": mid,
-                            "action": "scheme_up_organization",
+                            "action": "scheme_generate_org",
                         },
                     },
                 }
             }
         )
+        print("[ProcessingService] [generateschemeorg] payload: ", payload)
         ws.send(payload)
-        _ = self.wait_for_response(ws)
+        response = self.wait_for_response(ws)
+        status = response.get("status", "error") or "error"
+        print("[ProcessingService] [generateschemeorg] status: ", status)
+        print("[ProcessingService] [generateschemeorg] response: ", response)
+
         ws.close()
-        return "Successfully!"
+        return "Success!"
 
 
 # Singleton-like instance for importers
