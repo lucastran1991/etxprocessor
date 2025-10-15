@@ -15,13 +15,13 @@ import {
   Select,
   Button,
   HStack,
-  Badge
+  Badge,
+  Spinner
 } from '@chakra-ui/react'
 import Layout from '@/components/layout/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import FileExplorer from '@/components/FileExplorer'
-import { processingService } from '../../services/processingService'
 import { apiClient } from '@/services/apiClient'
 
 interface FileNode {
@@ -53,11 +53,10 @@ export default function ProcessingPage() {
     console.log('selectedFile', selectedFile)
     console.log('action', action)
 
+    setIsProcessing(true)
     try {
       const formData = new FormData();
       formData.append('data_file', selectedFile.id);
-      // formData.append('file_path', selectedFile.path);
-      // formData.append('file_id', selectedFile.id);
 
       let endpoint = '';
       switch (action) {
@@ -74,7 +73,6 @@ export default function ProcessingPage() {
           return;
       }
 
-      setIsProcessing(true)
       const response = await apiClient.post(endpoint, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -117,12 +115,14 @@ export default function ProcessingPage() {
                 <Divider />
                 <CardBody>
                   <VStack align="stretch" spacing={4}>
-                    <Select value={action} onChange={(e) => setAction(e.target.value)}>
-                      {['Import Organizations', 'Import Emission Sources', 'Load BAR Data'].map((a) => (
-                        <option key={a} value={a}>{a}</option>
-                      ))}
-                    </Select>
-                    <Button colorScheme="brand" onClick={handleProcessing} isDisabled={!selectedFile}>Execute</Button>
+                    <HStack align="stretch" spacing={4}>
+                      <Select value={action} onChange={(e) => setAction(e.target.value)} w="50%" isDisabled={isProcessing}>
+                        {['Import Organizations', 'Import Emission Sources', 'Load BAR Data'].map((a) => (
+                          <option key={a} value={a}>{a}</option>
+                        ))}
+                      </Select>
+                      <Button colorScheme="brand" onClick={handleProcessing} isDisabled={!selectedFile || isProcessing} w="50%">Execute</Button>
+                    </HStack>
                     {selectedFile ? (
                       <VStack align="start" spacing={1} fontSize="sm">
                         <HStack><Badge>File</Badge><Text>{selectedFile.name}</Text></HStack>

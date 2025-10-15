@@ -206,7 +206,8 @@ class ProcessingService:
         ws = self.connect_websocket(ws_url)
 
         # set org
-        ws.send(self.build_set_org(mid="m2"))
+        mid = str(uuid.uuid4())
+        ws.send(self.build_set_org(mid=mid))
         _ = self.wait_for_response(ws)
         return ws
 
@@ -385,7 +386,7 @@ class ProcessingService:
         user: User = None,
         mid: Optional[str] = str(uuid.uuid4()),
     ) -> str:
-        
+
         config = self.load_config()
         ws = self.ws_init(config)
         folder = config.get("ServerFileFolder", "")
@@ -515,12 +516,10 @@ class ProcessingService:
             return "error"
         csv_string = file_bytes.decode("utf-8", errors="replace")
         # Escape for embedding inside single-quoted payload: escape backslashes, single quotes, and newlines
-        csv_string = (
-            csv_string.replace("\\", r"\\").replace("'", r"\'").replace("\n", r"\n")
-        )
+        csv_string = csv_string.replace("\r\n", "\n")
 
         if tenant_name:
-            payload = json.dumps({"GetOrgs": {"mid": "m1"}})
+            payload = json.dumps({"GetOrgs": {"mid": mid}})
             ws.send(payload)
             resp = self.wait_for_response(ws) or {}
             dict_org = (resp.get("GetOrgs", {}) or {}).get("Orgs", {})
@@ -528,13 +527,16 @@ class ProcessingService:
             for key, value in dict_org.items():
                 if value.get("name") == tenant_name:
                     org_id = key
-            setorg = json.dumps({"SetOrg": {"mid": "m1", "id": org_id}})
+            setorg = json.dumps({"SetOrg": {"mid": mid, "id": org_id}})
             ws.send(setorg)
             _ = self.wait_for_response(ws)
 
         payload = json.dumps(
             {"CreateOrgStructureFromCsv": {"mid": mid, "data": csv_string}}
         )
+
+        print("[createorg] payload: ", payload)
+        
         ws.send(payload)
         response = self.wait_for_response(ws)
         status = response.get("status", "error") or "error"
@@ -545,14 +547,16 @@ class ProcessingService:
         return "Successfully!"
 
     @log_call
-    def updateversion(self, version: Optional[str] = None) -> str:
+    def updateversion(
+        self, version: Optional[str] = None, mid: Optional[str] = str(uuid.uuid4())
+    ) -> str:
         config = self.load_config()
         ws = self.ws_init(config)
         formatted_date = datetime.now().strftime("%d-%m-%Y")
         payload = json.dumps(
             {
                 "SetVersion": {
-                    "mid": "m2",
+                    "mid": mid,
                     "etxVersion": version,
                     "releaseDate": formatted_date,
                     "description": "dev server",
@@ -568,21 +572,24 @@ class ProcessingService:
     def generate_scheme_org(self, mid: Optional[str] = str(uuid.uuid4())) -> str:
         config = self.load_config()
         ws = self.ws_init(config)
-        payload = json.dumps({
-            "PyRequest": {
-                "app": "genie_scheme_coordinator_app",
-                "value": {
-                    "Input": {
-                        "mid": mid,
-                        "action": "scheme_up_organization",
+        payload = json.dumps(
+            {
+                "PyRequest": {
+                    "app": "genie_scheme_coordinator_app",
+                    "value": {
+                        "Input": {
+                            "mid": mid,
+                            "action": "scheme_up_organization",
+                        },
                     },
-                },
+                }
             }
-        })
+        )
         ws.send(payload)
         _ = self.wait_for_response(ws)
         ws.close()
         return "Successfully!"
-        
+
+
 # Singleton-like instance for importers
 processing_service = ProcessingService()

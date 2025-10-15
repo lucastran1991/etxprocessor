@@ -169,7 +169,7 @@ export default function Header() {
                       Profile
                     </MenuItem> */}
                     <MenuItem onClick={handleLogout} color="red.500">
-                      Lấy dép, ra về
+                      <Text fontWeight="bold">Logout</Text>
                     </MenuItem>
                   </MenuList>
                 </Menu>
