@@ -81,7 +81,7 @@ export default function FilesPage() {
 
   return (
     <Layout>
-      <Container maxW="container.xl" py={8}>
+      <Container maxW="90%" pt="5%" pb="2%" pl="5%" pr="2%">
         <VStack spacing={6} align="stretch">
           <Box>
             <Heading as="h1" size="xl" mb={2}>
@@ -113,7 +113,7 @@ export default function FilesPage() {
                   <Heading size="md">File Explorer</Heading>
                 </CardHeader>
                 <Divider />
-                <CardBody maxH="600px" overflowY="auto">
+                <CardBody maxH="800px" overflowY="auto">
                   <FileExplorer
                     key={refreshKey}
                     onRefresh={handleUploadComplete}

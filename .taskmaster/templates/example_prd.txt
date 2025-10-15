@@ -30,7 +30,7 @@ A comprehensive user management and data processing system with a modern web int
 
 ## Project Structure
 
-```
+```plaintext
 etxprocessor/
 ├── backend/                 # Python FastAPI Backend
 │   ├── app/
@@ -99,43 +99,20 @@ pydantic-settings==2.1.0
 - **Authentication**:
   - `POST /auth/register` - User registration
   - `POST /auth/login` - User login
-  - `POST /auth/logout` - User logout
-  - `GET /auth/me` - Get current user
-  - `PUT /auth/me` - Update user profile
+  - `POST /auth/me` - Get current user
 
 - **User Management**:
-  - `GET /users/` - List users (admin only)
-  - `GET /users/{user_id}` - Get user by ID
+  - `GET /users/me` - Get logged-in user details
+  - `PUT /users/me` - Update logged-in user
+  - `GET /users` - List users (admin only)
   - `PUT /users/{user_id}` - Update user (admin only)
   - `DELETE /users/{user_id}` - Delete user (admin only)
 
-- **Avatar Management**:
-  - `POST /users/avatar` - Upload avatar image
-  - `DELETE /users/avatar` - Remove avatar image
-
-### Database Schema
-```sql
--- Users table
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role VARCHAR(20) DEFAULT 'user',
-    avatar_url VARCHAR(500),
-    level INTEGER DEFAULT 1,
-    exp DOUBLE PRECISION DEFAULT 0.0,
-    is_active BOOLEAN DEFAULT TRUE,
-    is_verified BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create indexes
-CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
-```
+- **Processing**:
+  - `POST /processing/createorg` - Create organization
+  - `POST /processing/ingestes` - Ingest ES
+  - `POST /processing/ingestbar` - Ingest BAR data
+  - `POST /processing/generateschemeorg` - Generate organization scheme
 
 ## Frontend Requirements
 
@@ -182,7 +159,6 @@ CREATE INDEX idx_users_role ON users(role);
 
 - **Home Page** (`/`):
   - User profile card with avatar, username, role
-  - Level and experience display with progress bar
   - Navigation menu
   - Logout functionality
 
@@ -204,62 +180,6 @@ CREATE INDEX idx_users_role ON users(role);
   - Form states and validation
   - Loading states
   - Error messages
-
-## Development Environment
-
-### Local Development Setup
-```yaml
-# docker-compose.yml
-version: '3.8'
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/etxprocessor
-      - SECRET_KEY=your-secret-key
-      - AWS_ACCESS_KEY_ID=your-access-key
-      - AWS_SECRET_ACCESS_KEY=your-secret-key
-      - AWS_S3_BUCKET=your-bucket-name
-    depends_on:
-      - db
-  
-  frontend:
-    build: ./frontend
-    ports:
-      - "8888:8888"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-  
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_DB=etxprocessor
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-```
-
-### Environment Variables
-```bash
-# .env.example
-# Backend
-DATABASE_URL=postgresql://user:password@localhost:5432/etxprocessor
-SECRET_KEY=your-secret-key-here
-AWS_ACCESS_KEY_ID=your-aws-access-key
-AWS_SECRET_ACCESS_KEY=your-aws-secret-key
-AWS_S3_BUCKET=your-s3-bucket-name
-AWS_REGION=us-east-1
-
-# Frontend
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_APP_NAME=ETX Processor
-```
 
 ## Deployment Requirements
 
@@ -398,6 +318,6 @@ This PRD serves as the primary source for task-master-ai task generation. The sy
 ---
 
 **Document Version**: 1.0.0  
-**Last Updated**: 2024-01-XX  
-**Next Review**: 2024-02-XX  
-**Status**: Draft
+**Last Updated**: 2025-10-15  
+**Next Review**: 2026-10-14  
+**Status**: Updated

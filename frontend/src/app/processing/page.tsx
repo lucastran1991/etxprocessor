@@ -109,7 +109,7 @@ export default function ProcessingPage() {
 
   return (
     <Layout>
-      <Container maxW="container.xl" py={8} position="relative">
+      <Container maxW="90%" pt="5%" pb="2%" pl="5%" pr="2%">
         {isProcessing && (
           <VStack justifyContent="center" alignItems="center" position="absolute" top={0} left={0} width="100%" height="100%" bg="rgba(0, 0, 0, 0.5)" zIndex={1}>
             <Spinner size="xl" color="white" />
@@ -124,7 +124,7 @@ export default function ProcessingPage() {
                   <Heading size="md">File Explorer</Heading>
                 </CardHeader>
                 <Divider />
-                <CardBody maxH="600px" overflowY="auto">
+                <CardBody maxH="800px" overflowY="auto">
                   <FileExplorer readOnly hideItemDelete onFileSelect={(f: FileNode) => { if (f.type === 'file') setSelectedFile(f) }} />
                 </CardBody>
               </Card>

@@ -2,217 +2,139 @@
   "master": {
     "tasks": [
       {
-        "id": 1,
-        "title": "Set up project structure",
-        "description": "Create the project structure as outlined in the PRD.",
-        "details": "Follow the provided architecture to set up the backend and frontend directories, including necessary subdirectories.",
-        "testStrategy": "Manual verification",
+        "id": 21,
+        "title": "Set up Python FastAPI project structure",
+        "description": "Create the backend directory and set up the necessary files for the FastAPI project",
+        "details": "Create a new directory called 'backend' and move into it. Initialize a new FastAPI project using `fastapi init` command.",
+        "testStrategy": "Check that the project structure is correct by running `tree` command in the terminal.",
         "priority": "high",
         "dependencies": [],
-        "status": "done",
+        "status": "pending",
         "subtasks": []
       },
       {
-        "id": 2,
-        "title": "Install dependencies",
-        "description": "Install required dependencies for both the backend and frontend as specified in the PRD.",
-        "details": "Make sure to use the exact versions mentioned in the PRD.",
-        "testStrategy": "Automated tests (e.g., npm install or pip install)",
+        "id": 22,
+        "title": "Implement authentication using FastAPI-Users",
+        "description": "Set up user registration and login API endpoints using FastAPI-Users library",
+        "details": "Install the `fastapi-users` library and set up the necessary configuration files. Implement the registration and login API endpoints according to the documentation.",
+        "testStrategy": "Test the registration and login API endpoints by sending HTTP requests with a tool like Postman or cURL.",
         "priority": "high",
         "dependencies": [
-          1
+          21
         ],
-        "status": "done",
+        "status": "pending",
         "subtasks": []
       },
       {
-        "id": 3,
-        "title": "Configure environment variables",
-        "description": "Set up environment variables for both the backend and frontend as per the PRD.",
-        "details": "Create .env files and ensure they contain the required variables.",
-        "testStrategy": "Manual verification",
+        "id": 23,
+        "title": "Set up PostgreSQL database using SQLAlchemy",
+        "description": "Create a new PostgreSQL database and set up the necessary configuration files for SQLAlchemy",
+        "details": "Install the `psycopg2` library and set up the necessary configuration files. Create a new database schema using SQLAlchemy.",
+        "testStrategy": "Test that the database connection is working by running a simple query in the terminal.",
+        "priority": "medium",
+        "dependencies": [
+          21
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "Implement user management API endpoints",
+        "description": "Set up the necessary API endpoints for user management using FastAPI and SQLAlchemy",
+        "details": "Implement the API endpoints for creating, reading, updating, and deleting users according to the documentation.",
+        "testStrategy": "Test the API endpoints by sending HTTP requests with a tool like Postman or cURL.",
         "priority": "high",
         "dependencies": [
-          2
+          22,
+          23
         ],
-        "status": "done",
+        "status": "pending",
         "subtasks": []
       },
       {
-        "id": 5,
-        "title": "Implement database models",
-        "description": "Create the required database models for both backend and frontend.",
-        "details": "Make sure to follow best practices for database normalization.",
-        "testStrategy": "Automated tests (e.g., unit tests or migration tests)",
-        "priority": "high",
+        "id": 25,
+        "title": "Set up Next.js project structure",
+        "description": "Create the frontend directory and set up the necessary files for the Next.js project",
+        "details": "Create a new directory called 'frontend' and move into it. Initialize a new Next.js project using `npx create-next-app` command.",
+        "testStrategy": "Check that the project structure is correct by running `tree` command in the terminal.",
+        "priority": "medium",
         "dependencies": [],
-        "status": "done",
+        "status": "pending",
         "subtasks": []
       },
       {
-        "id": 6,
-        "title": "Develop API endpoints",
-        "description": "Implement the API endpoints as specified in the PRD.",
-        "details": "Ensure to follow best practices for RESTful APIs.",
-        "testStrategy": "Automated tests (e.g., integration tests or unit tests)",
+        "id": 26,
+        "title": "Implement authentication using Next.js",
+        "description": "Set up user registration and login API endpoints using Next.js",
+        "details": "Implement the registration and login API endpoints according to the documentation.",
+        "testStrategy": "Test the registration and login API endpoints by sending HTTP requests with a tool like Postman or cURL.",
         "priority": "high",
         "dependencies": [
-          5
+          25
         ],
-        "status": "done",
+        "status": "pending",
         "subtasks": []
       },
       {
-        "id": 7,
-        "title": "Develop frontend components",
-        "description": "Create the required frontend components as per the PRD.",
-        "details": "Ensure to follow best practices for accessible and performant frontend development.",
-        "testStrategy": "Automated tests (e.g., unit tests or E2E tests)",
-        "priority": "high",
+        "id": 27,
+        "title": "Implement user management UI components",
+        "description": "Create the necessary UI components for user management using Next.js and React",
+        "details": "Implement the UI components according to the documentation.",
+        "testStrategy": "Test the UI components by rendering them in the browser.",
+        "priority": "medium",
         "dependencies": [
-          6
+          25
         ],
-        "status": "done",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Create header component",
-            "description": "Design and implement the header component according to PRD.",
-            "dependencies": [],
-            "details": "Follow accessible and performant frontend development best practices.",
-            "status": "done",
-            "testStrategy": "Automated tests (e.g., unit tests or E2E tests)"
-          },
-          {
-            "id": 2,
-            "title": "Create navigation component",
-            "description": "Design and implement the navigation component as per PRD.",
-            "dependencies": [
-              1
-            ],
-            "details": "Ensure proper integration with header component.",
-            "status": "done",
-            "testStrategy": "Automated tests (e.g., unit tests or E2E tests)"
-          },
-          {
-            "id": 3,
-            "title": "Create content area component",
-            "description": "Design and implement the content area component as per PRD.",
-            "dependencies": [
-              1,
-              2
-            ],
-            "details": "Integrate header and navigation components with content area.",
-            "status": "done",
-            "testStrategy": "Automated tests (e.g., unit tests or E2E tests)"
-          },
-          {
-            "id": 4,
-            "title": "Create footer component",
-            "description": "Design and implement the footer component as per PRD.",
-            "dependencies": [
-              1,
-              2
-            ],
-            "details": "Ensure proper integration with content area component.",
-            "status": "done",
-            "testStrategy": "Automated tests (e.g., unit tests or E2E tests)"
-          },
-          {
-            "id": 5,
-            "title": "Connect API to frontend components",
-            "description": "Integrate API endpoints with frontend components as specified.",
-            "dependencies": [
-              7
-            ],
-            "details": "Ensure that data is correctly fetched and displayed.",
-            "status": "done",
-            "testStrategy": "Automated tests (e.g., integration tests or E2E tests)"
-          }
-        ]
-      },
-      {
-        "id": 8,
-        "title": "Integrate API with frontend",
-        "description": "Connect the API endpoints to the frontend components.",
-        "details": "Ensure that data is correctly fetched and displayed.",
-        "testStrategy": "Automated tests (e.g., integration tests or E2E tests)",
-        "priority": "high",
-        "dependencies": [
-          7
-        ],
-        "status": "done",
+        "status": "pending",
         "subtasks": []
       },
       {
-        "id": 10,
-        "title": "Deploy to AWS EC2",
-        "description": "Deploy the application to an AWS EC2 instance.",
-        "details": "Ensure that all necessary configurations have been made.",
-        "testStrategy": "Manual verification",
+        "id": 28,
+        "title": "Implement deployment scripts",
+        "description": "Set up the necessary scripts for deploying the application to AWS EC2",
+        "details": "Create a new file called `deploy.sh` and add the necessary commands for building and deploying the application.",
+        "testStrategy": "Test that the deployment script is working by running it manually.",
         "priority": "high",
-        "dependencies": [],
-        "status": "not started",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Create AWS EC2 instance",
-            "description": "Set up a basic EC2 instance (t3.medium) with Ubuntu 22.04 LTS for demo deployment",
-            "details": "Launch a new EC2 instance with appropriate security groups and key pair for demo purposes",
-            "status": "pending",
-            "dependencies": [],
-            "parentTaskId": 10
-          },
-          {
-            "id": 2,
-            "title": "Install development environment",
-            "description": "Install Node.js 18.x, Python 3.9+, and PostgreSQL on the EC2 instance",
-            "details": "Install required runtime environments and database for running the application directly",
-            "status": "pending",
-            "dependencies": [
-              1
-            ],
-            "parentTaskId": 10
-          },
-          {
-            "id": 3,
-            "title": "Clone and setup source code",
-            "description": "Clone the repository and install dependencies for both backend and frontend",
-            "details": "Clone the source code from repository and run npm install and pip install commands",
-            "status": "pending",
-            "dependencies": [
-              2
-            ],
-            "parentTaskId": 10
-          },
-          {
-            "id": 4,
-            "title": "Configure and start services",
-            "description": "Set up environment variables, start database, and run both backend and frontend services",
-            "details": "Configure .env files, start PostgreSQL, run FastAPI backend, and start Next.js frontend",
-            "status": "pending",
-            "dependencies": [
-              3
-            ],
-            "parentTaskId": 10
-          },
-          {
-            "id": 5,
-            "title": "Test demo deployment",
-            "description": "Verify that the application is running correctly and accessible via web browser",
-            "details": "Test all endpoints and UI functionality to ensure the demo is working properly",
-            "status": "pending",
-            "dependencies": [
-              4
-            ],
-            "parentTaskId": 10
-          }
-        ]
+        "dependencies": [
+          21,
+          25
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 29,
+        "title": "Implement monitoring and logging",
+        "description": "Set up the necessary tools for monitoring and logging the application",
+        "details": "Create a new file called `monitoring.sh` and add the necessary commands for setting up monitoring and logging.",
+        "testStrategy": "Test that the monitoring and logging script is working by running it manually.",
+        "priority": "medium",
+        "dependencies": [
+          21,
+          25
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 30,
+        "title": "Implement security measures",
+        "description": "Set up the necessary security measures for the application",
+        "details": "Implement the necessary security measures according to the documentation.",
+        "testStrategy": "Test that the security measures are working by running a series of tests manually.",
+        "priority": "high",
+        "dependencies": [
+          21,
+          25
+        ],
+        "status": "pending",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-10-09T09:29:37.597Z",
-      "updated": "2025-10-09T16:54:01.330Z",
+      "updated": "2025-10-15T06:12:45.727Z",
       "description": "Tasks for master context"
     }
   }

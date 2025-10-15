@@ -117,8 +117,8 @@ export default function Profile() {
 
   return (
     <Layout>
-      <Container maxW="4xl" py={10}>
-        <VStack spacing={8} align="stretch">
+      <Container maxW="90%" pt="5%" pb="2%" pl="5%" pr="2%">
+        <VStack spacing={8} align="start">
           <Box>
             <Heading as="h1" size="xl" mb={2}>
               Profile

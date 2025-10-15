@@ -61,8 +61,8 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <Container maxW="7xl" py={10}>
-        <VStack spacing={8} align="stretch">
+      <Container maxW="90%" pt="5%" pb="2%" pl="5%" pr="5%">
+        <VStack spacing={8} align="left">
           <Box>
             <Heading as="h1" size="xl" mb={2}>
               Welcome back, {user.username}!

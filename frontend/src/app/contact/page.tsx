@@ -8,8 +8,8 @@ export default function ContactPage() {
   const borderColor = useColorModeValue('gray.200', 'gray.700')
   return (
     <Layout>
-      <Container maxW="7xl" py={10}>
-        <VStack spacing={6} align="stretch">
+      <Container maxW="90%" pt="5%" pb="2%" pl="5%" pr="2%">
+        <VStack spacing={6} align="start">
           <Heading as="h1" size="xl">Contact</Heading>
           <Card bg={cardBg} borderColor={borderColor} borderWidth="1px">
             <CardBody>

@@ -2,204 +2,145 @@
 
 import {
   Box,
-  Flex,
-  Heading,
-  Spacer,
-  Button,
+  VStack,
+  IconButton,
+  useColorModeValue,
+  useDisclosure,
+  Link as ChakraLink,
+  useColorMode,
   Avatar,
-  Menu,
-  MenuButton,
   MenuList,
   MenuItem,
-  MenuDivider,
-  Text,
-  useColorModeValue,
-  IconButton,
-  useDisclosure,
-  Drawer,
-  DrawerBody,
-  DrawerHeader,
-  DrawerOverlay,
-  DrawerContent,
-  DrawerCloseButton,
-  VStack,
-  HStack,
-  Link as ChakraLink
-} from '@chakra-ui/react'
-import { HamburgerIcon, CloseIcon, SunIcon, MoonIcon } from '@chakra-ui/icons'
-import { useAuth } from '@/hooks/useAuth'
-import { useRouter, usePathname } from 'next/navigation'
+  Menu,
+  MenuButton,
+} from '@chakra-ui/react';
+import { FaRegFileAlt, FaUserCircle } from 'react-icons/fa';
+import { MdOutlineSpaceDashboard, MdLogin } from 'react-icons/md';
+import { RiHome2Line } from 'react-icons/ri';
+import { IoIosCog } from 'react-icons/io';
+import { GrAction } from 'react-icons/gr';
+import { CgProfile } from 'react-icons/cg';
+import { SlNotebook } from 'react-icons/sl';
+
+import { SunIcon, MoonIcon } from '@chakra-ui/icons';
+import { useAuth } from '@/hooks/useAuth';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link'
-import { getImageUrl } from '@/utils/imageUrl'
-import { useColorMode } from '@chakra-ui/react'
+import { getImageUrl } from '@/utils/imageUrl';
 
-export default function Header() {
-  const { user, logout } = useAuth()
-  const router = useRouter()
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const bg = useColorModeValue('white', 'gray.800')
-  const borderColor = useColorModeValue('gray.200', 'gray.700')
-  const { colorMode, toggleColorMode } = useColorMode()
+// Define types for NavItem props
+interface NavItemProps {
+  href: string;
+  icon: typeof FaUserCircle; // Assuming icon has a default type like FaUser
+  children: React.ReactNode;
+  isOpen: boolean;
+  boxSize: string;
+}
 
-  const handleLogout = () => {
-    logout()
-    router.push('/')
-  }
+const NavItem: React.FC<NavItemProps> = ({ href, icon, children, isOpen, boxSize }) => {
+  const pathname = usePathname();
+  const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
+  // NavItem renderer logic
+  return (
+    <ChakraLink
+      as={Link}
+      href={href}
+      display="flex"
+      alignItems="center"
+      p={4}
+      w="full"
+      // rounded="md"
+      _hover={{ textDecoration: 'none', bg: useColorModeValue('brand.400', 'gray.900') }}
+      bg={isActive ? useColorModeValue('brand.600', 'whiteAlpha.200') : 'transparent'}
+      color={isActive ? useColorModeValue('whiteAlpha.900', 'brand.200') : undefined}
+      fontWeight={isActive ? 'bold' : 'normal'}
+    >
+      {icon && <Box as={icon} boxSize={boxSize} mr={isOpen ? 4 : 0} />}
+      {isOpen && children}
+    </ChakraLink>
+  );
+};
 
-  const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
-    const pathname = usePathname()
-    const isActive = pathname === href || (href !== '/' && pathname.startsWith(href))
-    const hoverBg = useColorModeValue('gray.200', 'gray.700')
-    const activeBg = useColorModeValue('brand.50', 'whiteAlpha.200')
-    const activeColor = useColorModeValue('brand.700', 'brand.200')
-    return (
-      <ChakraLink
-        as={Link}
-        href={href}
-        px={4}
-        py={2}
-        rounded="lg"
-        color={isActive ? activeColor : undefined}
-        bg={isActive ? activeBg : 'transparent'}
-        fontWeight={isActive ? 'semibold' : 'normal'}
-        _hover={{ textDecoration: 'none', bg: hoverBg, rounded: 'lg' }}
-      >
-        {children}
-      </ChakraLink>
-    )
-  }
+const Sidebar = () => {
+  const { colorMode, toggleColorMode } = useColorMode();  // Make sure toggleColorMode is available
+  const { user, logout } = useAuth();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const bg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
-  const MobileNav = () => (
-    <Drawer isOpen={isOpen} onClose={onClose} placement="right">
-      <DrawerOverlay />
-      <DrawerContent>
-        <DrawerCloseButton />
-        <DrawerHeader>Menu</DrawerHeader>
-        <DrawerBody>
-          <VStack spacing={4} align="stretch">
-            {/* Home hidden */}
-            {user ? (
-              <>
-                <NavLink href="/dashboard">Dashboard</NavLink>
-                <NavLink href="/config">Config</NavLink>
-                <NavLink href="/files">Files</NavLink>
-                <NavLink href="/processing">Processing</NavLink>
-                <NavLink href="/profile">Profile</NavLink>
-                <Button onClick={toggleColorMode} variant="outline">
-                  {colorMode === 'light' ? 'Dark mode' : 'Light mode'}
-                </Button>
-                <Button onClick={handleLogout} colorScheme="red" variant="outline">
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <>
-                <NavLink href="/login">Login</NavLink>
-                <NavLink href="/register">Register</NavLink>
-                <Button onClick={toggleColorMode} variant="outline">
-                  {colorMode === 'light' ? 'Dark mode' : 'Light mode'}
-                </Button>
-              </>
-            )}
-          </VStack>
-        </DrawerBody>
-      </DrawerContent>
-    </Drawer>
-  )
-
+  // Sidebar renderer logic
   return (
     <Box
+      as="nav"
+      pos="fixed"
+      top="0"
+      left="0"
+      h="full"
+      w={isOpen ? '250px' : '60px'}
       bg={bg}
-      borderBottom="1px"
+      borderRight="1px"
       borderColor={borderColor}
-      position="sticky"
-      top={0}
-      zIndex={1000}
+      zIndex="sticky"
+      boxShadow="base" // Add shadow effect
+      overflowY="auto"
+      onMouseEnter={onOpen}
+      onMouseLeave={onClose}
+      transition="width 0.2s ease"
     >
-      <Flex
-        h={16}
-        alignItems="center"
-        justifyContent="space-between"
-        px={4}
-        maxW="7xl"
-        mx="auto"
-      >
-        {/* Logo */}
-        <Flex alignItems="center">
-          <ChakraLink as={Link} href="/" _hover={{ textDecoration: 'none' }}>
-            <Heading as="h1" size="md" color="brand.500">
-              ETX Processor
-            </Heading>
-          </ChakraLink>
-        </Flex>
-
-        {/* Desktop Navigation */}
-        <Flex alignItems="center" display={{ base: 'none', md: 'flex' }}>
-          <HStack spacing={8}>
-            {/* Home hidden */}
-            {user ? (
-              <>
-                <NavLink href="/dashboard">Dashboard</NavLink>
-                <NavLink href="/config">Config</NavLink>
-                <NavLink href="/files">Files</NavLink>
-                <NavLink href="/processing">Processing</NavLink>
-                <NavLink href="/profile">Profile</NavLink>
-                <IconButton
-                  aria-label="Toggle color mode"
-                  onClick={toggleColorMode}
-                  variant="ghost"
-                  icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
-                />
-                <Menu>
-                  <MenuButton
-                    as={Button}
-                    rounded="full"
-                    variant="link"
-                    cursor="pointer"
-                    minW={0}
-                  >
-                    <Avatar size="sm" name={user.username} src={getImageUrl(user.avatar_url)} />
-                  </MenuButton>
-                  <MenuList>
-                    <MenuItem>
-                      <Text fontWeight="bold">{user.username}</Text>
-                    </MenuItem>
-                    <MenuDivider />
-                    {/* <MenuItem onClick={() => router.push('/profile')}>
-                      Profile
-                    </MenuItem> */}
-                    <MenuItem onClick={handleLogout} color="red.500">
-                      <Text fontWeight="bold">Logout</Text>
-                    </MenuItem>
-                  </MenuList>
-                </Menu>
-              </>
-            ) : (
-              <>
-                <NavLink href="/login">Login</NavLink>
-                <NavLink href="/register">Register</NavLink>
-                <IconButton
-                  aria-label="Toggle color mode"
-                  onClick={toggleColorMode}
-                  variant="ghost"
-                  icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
-                />
-              </>
-            )}
-          </HStack>
-        </Flex>
-
-        {/* Mobile menu button */}
+      <VStack spacing={4} py={4} alignItems="center">
+        <Box as={RiHome2Line} boxSize="32px" />
+      </VStack>
+      <VStack pt={4} spacing={0} justifyContent="center" alignItems="flex-start" flexGrow={1} w="full">
+        {user ? <UserMenuItems isOpen={isOpen} /> : <GuestMenuItems isOpen={isOpen} />}
+      </VStack>
+      <VStack position="absolute" bottom="0" w="full" py={4}>
         <IconButton
-          display={{ base: 'flex', md: 'none' }}
-          onClick={onOpen}
-          variant="outline"
-          aria-label="Open menu"
-          icon={<HamburgerIcon />}
+          aria-label="Toggle color mode"
+          icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+          onClick={toggleColorMode}
+          variant="ghost"
         />
-      </Flex>
-
-      <MobileNav />
+        {user && (
+          <Box display="flex" alignItems="center" mb={4}>
+            <Menu>
+              <MenuButton
+                as={Box}
+                cursor="pointer"
+                display="flex"
+                alignItems="center"
+              >
+                <Avatar
+                  size={isOpen ? 'lg' : 'sm'}
+                  name={user.username}
+                  src={getImageUrl(user.avatar_url)}                  
+                />
+              </MenuButton>
+              <MenuList>
+                <MenuItem onClick={() => logout()}>Logout</MenuItem>
+              </MenuList>
+            </Menu>
+          </Box>
+        )}
+      </VStack>
     </Box>
-  )
-}
+  );
+};
+
+const UserMenuItems: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
+  <>
+    <NavItem href="/dashboard" icon={MdOutlineSpaceDashboard} isOpen={isOpen} boxSize="30px">Dashboard</NavItem>
+    <NavItem href="/config" icon={IoIosCog} isOpen={isOpen} boxSize="30px">Configuration</NavItem>
+    <NavItem href="/files" icon={FaRegFileAlt} isOpen={isOpen} boxSize="30px">My Files</NavItem>
+    <NavItem href="/processing" icon={GrAction} isOpen={isOpen} boxSize="30px">Processing</NavItem>
+    <NavItem href="/profile" icon={CgProfile} isOpen={isOpen} boxSize="30px">Profile</NavItem>
+  </>
+);
+
+const GuestMenuItems: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
+  <>
+    <NavItem href="/login" icon={MdLogin} isOpen={isOpen} boxSize="30px">Login</NavItem>
+    <NavItem href="/register" icon={SlNotebook} isOpen={isOpen} boxSize="30px">Register</NavItem>
+  </>
+);
+
+export default Sidebar;
