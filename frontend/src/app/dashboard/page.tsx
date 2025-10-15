@@ -225,7 +225,7 @@ export default function Dashboard() {
                     <Card key={u.id} borderColor={borderColor} borderWidth="1px">
                       <CardBody>
                         <HStack spacing={4} align="center">
-                          <Avatar size="md" name={u.username} src={getImageUrl(u.avatar_url)} />
+                          <Avatar size="lg" name={u.username} src={getImageUrl(u.avatar_url)} />
                           <VStack align="start" spacing={0}>
                             <Text fontWeight="bold">{u.username}</Text>
                             <Text fontSize="sm" color="gray.500">{u.email}</Text>

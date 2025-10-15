@@ -14,13 +14,14 @@ import logging
 import pandas as pd
 from datetime import datetime
 from datetime import date
+import websocket
 
 # Create a logger
-logger = logging.getLogger('ETX Batch')
+logger = logging.getLogger("ETX Batch")
 logger.setLevel(logging.DEBUG)  # Set the logging level
 
 # Create handlers
-file_handler = logging.FileHandler('extbatch.log')  # Log to a file
+file_handler = logging.FileHandler("extbatch.log")  # Log to a file
 console_handler = logging.StreamHandler()  # Print to console
 
 # Set level for each handler
@@ -28,7 +29,7 @@ file_handler.setLevel(logging.DEBUG)
 console_handler.setLevel(logging.INFO)
 
 # Create a formatter and set it for both handlers
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 file_handler.setFormatter(formatter)
 console_handler.setFormatter(formatter)
 
@@ -36,33 +37,31 @@ console_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
+
 def load_config():
-    config_path = os.path.join(os.path.dirname(__file__), 'etxbatch.json')
+    config_path = os.path.join(os.path.dirname(__file__), "etxbatch.json")
     with open(config_path) as f:
         return json.load(f)
 
+
 def login(http_uri, email, password):
     url = f"{http_uri}/fid-auth"
-    payload = {
-        "login": {
-            "email": email,
-            "password": password
-        }
-    }
+    payload = {"login": {"email": email, "password": password}}
     response = requests.post(url, json=payload)
     if response.status_code != 200:
         raise Exception("Failed to log in.")
-    return response.json()['login']
+    return response.json()["login"]
+
 
 def ws_init(config=None):
-    http_uri = config['HTTPURI']
-    ws_uri = config['WSURI']
-    email = config['email']
-    password = config['password']
+    http_uri = config["HTTPURI"]
+    ws_uri = config["WSURI"]
+    email = config["email"]
+    password = config["password"]
 
     # Login
     resp = login(http_uri, email, password)
-    fid = resp['fid']
+    fid = resp["fid"]
 
     # WS Connect
     ws_url = f"{ws_uri}/fid-{fid}"
@@ -76,6 +75,7 @@ def ws_init(config=None):
 
     return ws
 
+
 def set_org(mid=None):
     payload_lines = []
     payload_lines.append("#")
@@ -86,11 +86,12 @@ def set_org(mid=None):
     payload_lines.append("SetOrg($args)\n")
     return "\n".join(payload_lines)
 
+
 def check_csv(file_name):
     if not os.path.isfile(file_name):
         raise FileNotFoundError(f"File not found: {file_name}")
 
-    with open(file_name, newline='') as csvfile:
+    with open(file_name, newline="") as csvfile:
         try:
             reader = csv.reader(csvfile)
             rows = list(reader)
@@ -100,40 +101,47 @@ def check_csv(file_name):
         except Exception as e:
             raise ValueError(f"Error reading CSV file: {e}")
 
+
 def create_temp_folder():
-    temp_folder = 'etxtemp'
+    temp_folder = "etxtemp"
     os.makedirs(temp_folder, exist_ok=True)
     return temp_folder
+
 
 def split_csv(rows, temp_folder, rows_per_file):
     file_names = []
     header = rows[0]  # Get the header row
     for i in range(1, len(rows), rows_per_file):  # Start from 1 to skip header
-        file_chunk = rows[i:i + rows_per_file]
+        file_chunk = rows[i : i + rows_per_file]
         file_name = os.path.join(temp_folder, f"chunk_{i // rows_per_file}.csv")
-        with open(file_name, 'w', newline='') as csvfile:
+        with open(file_name, "w", newline="") as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(header)  # Write the header to each chunk
             writer.writerows(file_chunk)
         file_names.append(file_name)  # Store the full path for later use
     return file_names
 
+
 def upload_file(file_name):
-    if not os.path.isfile('./upload_to_etx.sh'):
+    if not os.path.isfile("./upload_to_etx.sh"):
         raise FileNotFoundError("upload_to_etx.sh script not found.")
 
-    os.system(f'./upload_to_etx.sh {file_name}')
+    os.system(f"./upload_to_etx.sh {file_name}")
+
 
 def move_file_to_server_folder(file_name, server_folder):
     shutil.move(file_name, os.path.join(server_folder, os.path.basename(file_name)))
+
 
 def connect_websocket(ws_uri):
     ws = websocket.create_connection(ws_uri)
     print("Connected to WebSocket.")
     return ws
 
+
 def create_get_orgs_payload():
     return "#\n$org = GetOrgs().Orgs.getFirst()"
+
 
 def create_import_payload(mid, file_names):
     payload_lines = []
@@ -145,8 +153,11 @@ def create_import_payload(mid, file_names):
     payload_lines.append("SetOrg($args)\n")
     for file_name in file_names:
         payload_lines.append("#")
-        payload_lines.append(f'Async => ImportEmissionFromCsv(mid: "{mid}", fileName: "{os.path.basename(file_name)}");')
+        payload_lines.append(
+            f'Async => ImportEmissionFromCsv(mid: "{mid}", fileName: "{os.path.basename(file_name)}");'
+        )
     return "\n".join(payload_lines) + "\n"
+
 
 def wait_for_response(ws):
     response = None
@@ -160,6 +171,7 @@ def wait_for_response(ws):
 
     return response
 
+
 def ext_request(method=None, api_name=None, headers=None, data=None):
     config = load_config()
     uri = config.get("HTTPURI", "")
@@ -170,11 +182,10 @@ def ext_request(method=None, api_name=None, headers=None, data=None):
     if not headers:
         headers = {}
 
-    headers.update({
-        'DTX-DS-KEY': api_key
-    })
+    headers.update({"DTX-DS-KEY": api_key})
 
     return requests.request(method, url, headers=headers, data=data)
+
 
 def get_all_es():
     response = ext_request(method="GET", api_name="GetAllESs", data="")
@@ -182,6 +193,7 @@ def get_all_es():
     df = pd.DataFrame(es_json["GetAllESs"]["Results"]["EmissionSources"])
     logger.info(df)
     return df
+
 
 def publish_bar_data(es_id, bar_name, csv_data):
     global es_error_count
@@ -192,17 +204,17 @@ def publish_bar_data(es_id, bar_name, csv_data):
     )
     logger.info(f"Payload: {payload}")
     response = ext_request(method="POST", api_name="PublishBARData", data=payload)
-    #response_json = response.json()
+    # response_json = response.json()
     try:
         response_json = response.json()
     except ValueError:
         print("Response is not in JSON format")
         response_json = None
 
-    logger.info(response_json['PublishBARData'])
-    if "statusCode" in response_json['PublishBARData']:
-        logger.info(response_json['PublishBARData']['statusCode'])
-        if(response_json['PublishBARData']['statusCode'] != 200):
+    logger.info(response_json["PublishBARData"])
+    if "statusCode" in response_json["PublishBARData"]:
+        logger.info(response_json["PublishBARData"]["statusCode"])
+        if response_json["PublishBARData"]["statusCode"] != 200:
             es_error_count = es_error_count + 1
             logger.info(f"Can't Publish: {es_id}")
             logger.info(f"Es error count: {es_error_count}")
@@ -215,6 +227,7 @@ def publish_bar_data(es_id, bar_name, csv_data):
         logger.info(f"Es error count: {es_error_count}")
 
     return True
+
 
 def process_csv_file(file_path):
     global ess_df
@@ -296,19 +309,22 @@ def process_folder(dataFolder=None):
 
     return True
 
+
 def ingestes(dataFile=None, offset=0, nrows=100000):
     # print(locals())
     config = load_config()
     ws = ws_init(config)
     folder = config.get("ServerFileFolder", "")
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    file_name, file_extension = os.path.splitext(os.path.basename(dataFile))  # Split name and extension
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_name, file_extension = os.path.splitext(
+        os.path.basename(dataFile)
+    )  # Split name and extension
     file_name = f"{file_name}_{timestamp}{file_extension}"  # Create new file name
 
     #
     try:
         # Open the CSV file and the output text file
-        with open(dataFile, 'rb') as csv_file:
+        with open(dataFile, "rb") as csv_file:
             # Read the file content
             csv_content = csv_file.read()
 
@@ -316,7 +332,7 @@ def ingestes(dataFile=None, offset=0, nrows=100000):
             base64_bytes = base64.b64encode(csv_content)
 
             # Convert Base64 bytes back to a string
-            base64_string = base64_bytes.decode('utf-8')
+            base64_string = base64_bytes.decode("utf-8")
 
         print("Base64 Encoded CSV Content:")
         print(base64_string)
@@ -327,12 +343,15 @@ def ingestes(dataFile=None, offset=0, nrows=100000):
 
     # Upload Base64
     mid = uuid.uuid4()
-    payload = f"""#
-UploadBase64Imp:
-    mid: '{mid}'
-    fileName: '{file_name}'
-    content: '{base64_string}'
-"""
+    payload = json.dumps(
+        {
+            "UploadBase64Imp": {
+                "mid": str(mid),
+                "fileName": file_name,
+                "content": base64_string,
+            }
+        }
+    )
 
     logger.info(payload)
 
@@ -371,6 +390,7 @@ PyRequest:
     logger.info("WebSocket Connection CLOSED!!")
     return "Successfully!!"
 
+
 def ingestbar(dataFolder=None):
     # print(locals())
     global es_error_count
@@ -394,6 +414,7 @@ def ingestbar(dataFolder=None):
 
     return "Successfully!!"
 
+
 def ingestops(dataFile=None):
     print(locals())
     config = load_config()
@@ -403,6 +424,8 @@ def ingestops(dataFile=None):
     ws.close()
     logger.info("WebSocket Connection CLOSED!!")
     return "Successfully!!"
+
+
 def ingestesbyibot(dataFile=None):
     # print(locals())
     global es_error_count
@@ -413,7 +436,6 @@ def ingestesbyibot(dataFile=None):
     es_error_count = 0
     es_success_count = 0
 
-
     start_time = datetime.now()
     logger.info(f"Start Time: {start_time}")
 
@@ -423,12 +445,13 @@ def ingestesbyibot(dataFile=None):
     logger.info(f"End Time: {end_time}")
 
     return "Successfully!!"
+
+
 def create_es_using_ibot(dataFile=None):
     global es_error_count
     global es_success_count
 
     df = pd.read_csv(dataFile)
-
 
     # Initialize an empty dictionary
     data_dict = {}
@@ -437,29 +460,37 @@ def create_es_using_ibot(dataFile=None):
     for index, row in df.iterrows():
         # Define the key as a tuple of 4 columns
         print(row)
-        key = (row['orgFullName'], row['iBotName'], row['ibotCatalogName'], row['SIT'])
-        
+        key = (row["orgFullName"], row["iBotName"], row["ibotCatalogName"], row["SIT"])
+
         # If the key already exists in the dictionary, append the emissionSource
         if key in data_dict:
-            data_dict[key].append({"name" : row['emissionSource'].strip()})
+            data_dict[key].append({"name": row["emissionSource"].strip()})
         else:
             # Otherwise, create a new entry with the emissionSource as a list
-            data_dict[key] = [{"name" : row['emissionSource'].strip()}]
+            data_dict[key] = [{"name": row["emissionSource"].strip()}]
     for key, value in data_dict.items():
-        payload = json.dumps({
-        "iBotCatalogName": key[2].strip(),  # Get the iBotCatalogName that was created from UI
-        "iBotName": key[1].strip(),      # Get the iBotName that was created from UI
-        "SIT": "Month",
-        "orgName": key[0].strip(),  # orgName can be orgRootName or child level org
-        "EmissionSources": value  # Pass the emission_sources list
-        })
+        payload = json.dumps(
+            {
+                "iBotCatalogName": key[
+                    2
+                ].strip(),  # Get the iBotCatalogName that was created from UI
+                "iBotName": key[1].strip(),  # Get the iBotName that was created from UI
+                "SIT": "Month",
+                "orgName": key[
+                    0
+                ].strip(),  # orgName can be orgRootName or child level org
+                "EmissionSources": value,  # Pass the emission_sources list
+            }
+        )
         logger.info(f"Payload: {payload}")
-        response = ext_request(method="POST", api_name="CreateESUsingIBot", data=payload)
+        response = ext_request(
+            method="POST", api_name="CreateESUsingIBot", data=payload
+        )
         response_json = response.json()
-        logger.info(response_json['CreateESUsingIBot'])
-        if "statusCode" in response_json['CreateESUsingIBot']:
-            logger.info(response_json['CreateESUsingIBot']['statusCode'])
-            if(response_json['CreateESUsingIBot']['statusCode'] != 200):
+        logger.info(response_json["CreateESUsingIBot"])
+        if "statusCode" in response_json["CreateESUsingIBot"]:
+            logger.info(response_json["CreateESUsingIBot"]["statusCode"])
+            if response_json["CreateESUsingIBot"]["statusCode"] != 200:
                 es_error_count = es_error_count + len(value)
                 logger.info(f"Can't create es: {key[0]} + {value}")
                 logger.info(f"Es error count: {es_error_count}")
@@ -472,17 +503,15 @@ def create_es_using_ibot(dataFile=None):
             logger.info(f"Es error count: {es_error_count}")
     return True
 
+
 def addtenant(tenantName=None):
     # print(locals())
     config = load_config()
     ws = ws_init(config)
     folder = config.get("ServerFileFolder", "")
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     mid = uuid.uuid4()
-    args_2 = {
-        'mid': 'm1',
-        'name': tenantName
-    }
+    args_2 = {"mid": "m1", "name": tenantName}
     payload = f"""#
 CreateTenantAccount:
     Name: "{args_2['name']}"
@@ -499,11 +528,12 @@ CreateTenantAccount:
     logger.info("WebSocket Connection CLOSED!!")
     return "Successfully!!"
 
-def createorg(dataFile=None,tenantName=None):
+
+def createorg(dataFile=None, tenantName=None):
     config = load_config()
     ws = ws_init(config)
     folder = config.get("ServerFileFolder", "")
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     mid = uuid.uuid4()
 
@@ -516,9 +546,9 @@ GetOrgs:
     logger.info(f"get org: {json.dumps(resp, indent=2)}")
     dict_org = resp.get("GetOrgs", {}).get("Orgs", {})
     logger.info(f"org-list: {dict_org}")
-    org_id= ''
+    org_id = ""
     for key, value in dict_org.items():
-        if value.get('name') == tenantName:
+        if value.get("name") == tenantName:
             org_id = key
     logger.info(f"org_id: {org_id}")
     mid = uuid.uuid4()
@@ -544,19 +574,20 @@ Async => CreateOrgStructureFromCsv(mid: "{mid}", data: '{csv_string}')"""
     logger.info("WebSocket Connection CLOSED!!")
     return "Successfully!!"
 
+
 def main(command, file_name):
     config = load_config()
-    http_uri = config['HTTPURI']
-    ws_uri = config['WSURI']
-    email = config['email']
-    password = config['password']
-    server_folder = config['ServerFileFolder']
-    rows_per_file = config['RowsPerFile']
-    import_file_per_request = config['ImportFilePerRequest']
-    max_requests = config['MaxRequests']
+    http_uri = config["HTTPURI"]
+    ws_uri = config["WSURI"]
+    email = config["email"]
+    password = config["password"]
+    server_folder = config["ServerFileFolder"]
+    rows_per_file = config["RowsPerFile"]
+    import_file_per_request = config["ImportFilePerRequest"]
+    max_requests = config["MaxRequests"]
 
     login_response = login(http_uri, email, password)
-    fid = login_response['fid']
+    fid = login_response["fid"]
 
     ws_url = f"{ws_uri}/fid-{fid}"
     print(f"WebSocket URL: {ws_url}")
@@ -580,16 +611,16 @@ def main(command, file_name):
     ws = connect_websocket(ws_url)
 
     # Send GetOrgs payload
-    #get_orgs_payload = create_get_orgs_payload()
-    #print("\nSending GetOrgs payload to WebSocket:\n")
-    #print(get_orgs_payload)
+    # get_orgs_payload = create_get_orgs_payload()
+    # print("\nSending GetOrgs payload to WebSocket:\n")
+    # print(get_orgs_payload)
 
-    #ws.send(get_orgs_payload)
+    # ws.send(get_orgs_payload)
 
     # Wait for responses
     requests_sent = 0
     for i in range(0, len(file_names), import_file_per_request):
-        batch_files = file_names[i:i + import_file_per_request]
+        batch_files = file_names[i : i + import_file_per_request]
         mid = str(uuid.uuid4())  # Generate a unique mid for this batch
 
         import_payload = create_import_payload(mid, batch_files)
@@ -615,8 +646,16 @@ def main(command, file_name):
                     # Process ImportEmissionFromCsv response
                     status = import_response["ImportEmissionFromCsv"]
                     # Safely access fileName with .get() to avoid KeyError
-                    file_name = os.path.basename(batch_files[batch_files.index(import_response["ImportEmissionFromCsv"]["fileName"])])
-                    print(f"Filename: {file_name}, RowsCount: {status['Message']['RowsCount']}, SuccessRowsCount: {status['Message']['SuccessRowsCount']}")
+                    file_name = os.path.basename(
+                        batch_files[
+                            batch_files.index(
+                                import_response["ImportEmissionFromCsv"]["fileName"]
+                            )
+                        ]
+                    )
+                    print(
+                        f"Filename: {file_name}, RowsCount: {status['Message']['RowsCount']}, SuccessRowsCount: {status['Message']['SuccessRowsCount']}"
+                    )
                     responses_to_wait -= 1  # Decrement for each import response
 
         requests_sent += 1
@@ -626,12 +665,13 @@ def main(command, file_name):
 
     ws.close()
 
+
 def updateversion(version=None):
     # print(locals())
     config = load_config()
     ws = ws_init(config)
     folder = config.get("ServerFileFolder", "")
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     mid = uuid.uuid4()
     # Get the current date
     current_date = datetime.now()
@@ -657,13 +697,26 @@ def updateversion(version=None):
     logger.info("WebSocket Connection CLOSED!!")
     return "Successfully!!"
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Process CSV files.')
-    parser.add_argument('command', choices=['updateversion','createorg','addtenant','ingestesbyibot', 'ingestes', 'ingestbar', 'ingestops'], help='Command to execute')
-    parser.add_argument('--dataFile', help='Full path of the CSV file to consume')
-    parser.add_argument('--dataFolder', help='Folder path of the CSV files to consume')
-    parser.add_argument('--tenantName', help='The name of tenant to create')
-    parser.add_argument('--version', help='The version to update')
+    parser = argparse.ArgumentParser(description="Process CSV files.")
+    parser.add_argument(
+        "command",
+        choices=[
+            "updateversion",
+            "createorg",
+            "addtenant",
+            "ingestesbyibot",
+            "ingestes",
+            "ingestbar",
+            "ingestops",
+        ],
+        help="Command to execute",
+    )
+    parser.add_argument("--dataFile", help="Full path of the CSV file to consume")
+    parser.add_argument("--dataFolder", help="Folder path of the CSV files to consume")
+    parser.add_argument("--tenantName", help="The name of tenant to create")
+    parser.add_argument("--version", help="The version to update")
     args = parser.parse_args()
 
     # main(args.command, args.dataFile)
@@ -676,7 +729,7 @@ if __name__ == "__main__":
         keys = inspect.getfullargspec(func).args
         for arg in keys:
             v = getattr(args, arg, None)
-            if arg != 'self' and v is not None:
+            if arg != "self" and v is not None:
                 kwargs[arg] = v
 
             resp = func(**kwargs)
