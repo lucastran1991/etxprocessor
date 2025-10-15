@@ -118,7 +118,7 @@ export default function Profile() {
   return (
     <Layout>
       <Container maxW="90%" pt="5%" pb="2%" pl="5%" pr="2%">
-        <VStack spacing={8} align="start">
+        <VStack spacing={8} align="stretch">
           <Box>
             <Heading as="h1" size="xl" mb={2}>
               Profile
@@ -142,25 +142,6 @@ export default function Profile() {
                     {user.role.toUpperCase()}
                   </Badge>
                 </VStack>
-
-                {/*
-                  <VStack spacing={4} width="100%" maxW="md">
-                    <HStack justifyContent="space-between" width="100%">
-                      <Text fontWeight="bold">Level:</Text>
-                      <Text>{user.level}</Text>
-                    </HStack>
-                    <HStack justifyContent="space-between" width="100%">
-                      <Text fontWeight="bold">Experience:</Text>
-                      <Text>{user.exp} / {user.level * 100}</Text>
-                    </HStack>
-                    <Progress 
-                      value={getExpProgress(user.exp, user.level)} 
-                      size="lg" 
-                      colorScheme="brand" 
-                      width="100%" 
-                    />
-                  </VStack>
-                  */}
 
                 <Divider />
 

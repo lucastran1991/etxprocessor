@@ -8,7 +8,6 @@ import traceback
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 import time
-
 from urllib3 import response
 from app.services.file_service import FileService
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
@@ -426,12 +425,12 @@ class ProcessingService:
             }
         )
         self.logger.info("Uploading base64 file")
-        print("[ProcessingService] [ingestes] payload: ", payload)
+        print("[ingestes] payload: ", payload)
         ws.send(payload)
         response1 = self.wait_for_response(ws) or {}
         status1 = response1.get("status", "error") or "error"
-        print("[ProcessingService] [ingestes] response: ", response1)
-        print("[ProcessingService] [ingestes] status: ", status1)
+        print("[ingestes] response: ", response1)
+        print("[ingestes] status: ", status1)
 
         try:
             uploaded_file_path = (
@@ -462,18 +461,25 @@ class ProcessingService:
             }
         )
 
-        print("[ProcessingService] [ingestes] ingest_payload: ", ingest_payload)
+        print("[ingestes] ingest_payload: ", ingest_payload)
         ws.send(ingest_payload)
         response2 = self.wait_for_response(ws)
         status2 = response2.get("status", "error") or "error"
-        print("[ProcessingService] [ingestes] status: ", status2)
-        print("[ProcessingService] [ingestes] response: ", response2)
+        print("[ingestes] status: ", status2)
+        print("[ingestes] response: ", response2)
 
         ws.close()
         return "Successfully!"
 
     @log_call
-    def ingestbar(self, data_folder: Optional[str] = None) -> str:
+    def ingestbar(
+        self, 
+        data_folder: Optional[str] = None, 
+        db: Session = None, 
+        user: User = None, 
+        mid: Optional[str] = str(uuid.uuid4())
+    ) -> str:
+
         config = self.load_config()
         folder = config.get("ServerFileFolder", "")
         self.es_error_count = 0
@@ -482,7 +488,9 @@ class ProcessingService:
 
         start_time = datetime.now()
         self.logger.info(f"Start Time: {start_time}")
+
         self.process_folder(data_folder=os.path.join(folder, data_folder or ""))
+        
         end_time = datetime.now()
         self.logger.info(f"End Time: {end_time}")
         return "Successfully!!"
@@ -495,12 +503,12 @@ class ProcessingService:
             {"CreateTenantAccount": {"Name": tenant_name, "AutoCreateDatabase": True}}
         )
 
-        print("[ProcessingService] [addtenant] payload: ", payload)
+        print("[addtenant] payload: ", payload)
         ws.send(payload)
         response = self.wait_for_response(ws)
         status = response.get("status", "error") or "error"
-        print("[ProcessingService] [addtenant] status: ", status)
-        print("[ProcessingService] [addtenant] response: ", response)
+        print("[addtenant] status: ", status)
+        print("[addtenant] response: ", response)
 
         ws.close()
         return "Successfully!"
@@ -528,7 +536,7 @@ class ProcessingService:
 
         if tenant_name:
             payload = json.dumps({"GetOrgs": {"mid": mid}})
-            print("[ProcessingService] [createorg] payload: ", payload)
+            print("[createorg] payload: ", payload)
             ws.send(payload)
             resp = self.wait_for_response(ws) or {}
             dict_org = (resp.get("GetOrgs", {}) or {}).get("Orgs", {})
@@ -537,7 +545,7 @@ class ProcessingService:
                 if value.get("name") == tenant_name:
                     org_id = key
             setorg = json.dumps({"SetOrg": {"mid": mid, "id": org_id}})
-            print("[ProcessingService] [createorg] setorg: ", setorg)
+            print("[createorg] setorg: ", setorg)
             ws.send(setorg)
             _ = self.wait_for_response(ws)
 
@@ -545,12 +553,12 @@ class ProcessingService:
             {"CreateOrgStructureFromCsv": {"mid": mid, "data": csv_string}}
         )
 
-        print("[ProcessingService] [createorg] payload: ", payload)        
+        print("[createorg] payload: ", payload)
         ws.send(payload)
         response = self.wait_for_response(ws)
         status = response.get("status", "error") or "error"
-        print("[ProcessingService] [createorg] status: ", status)
-        print("[ProcessingService] [createorg] response: ", response)
+        print("[createorg] status: ", status)
+        print("[createorg] response: ", response)
 
         ws.close()
         return "Successfully!"
@@ -573,18 +581,23 @@ class ProcessingService:
             }
         )
 
-        print("[ProcessingService] [updateversion] payload: ", payload)
+        print("[updateversion] payload: ", payload)
         ws.send(payload)
         response = self.wait_for_response(ws)
         status = response.get("status", "error") or "error"
-        print("[ProcessingService] [updateversion] status: ", status)
-        print("[ProcessingService] [updateversion] response: ", response)
+        print("[updateversion] status: ", status)
+        print("[updateversion] response: ", response)
 
         ws.close()
         return "Successfully!"
 
     @log_call
-    def generateschemeorg(self, db: Session = None, user: User = None, mid: Optional[str] = str(uuid.uuid4())) -> str:
+    def generateschemeorg(
+        self,
+        db: Session = None,
+        user: User = None,
+        mid: Optional[str] = str(uuid.uuid4()),
+    ) -> str:
         config = self.load_config()
         ws = self.ws_init(config)
         payload = json.dumps(
@@ -594,18 +607,18 @@ class ProcessingService:
                     "value": {
                         "Input": {
                             "mid": mid,
-                            "action": "scheme_generate_org",
+                            "action": "scheme_up_organization",
                         },
                     },
                 }
             }
         )
-        print("[ProcessingService] [generateschemeorg] payload: ", payload)
+        print("[generateschemeorg] payload: ", payload)
         ws.send(payload)
         response = self.wait_for_response(ws)
         status = response.get("status", "error") or "error"
-        print("[ProcessingService] [generateschemeorg] status: ", status)
-        print("[ProcessingService] [generateschemeorg] response: ", response)
+        print("[generateschemeorg] status: ", status)
+        print("[generateschemeorg] response: ", response)
 
         ws.close()
         return "Success!"

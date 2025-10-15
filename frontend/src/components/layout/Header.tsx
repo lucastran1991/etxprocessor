@@ -24,6 +24,7 @@ import { SlNotebook } from 'react-icons/sl';
 
 import { SunIcon, MoonIcon } from '@chakra-ui/icons';
 import { useAuth } from '@/hooks/useAuth';
+import { Image } from '@chakra-ui/react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link'
 import { getImageUrl } from '@/utils/imageUrl';
@@ -88,7 +89,8 @@ const Sidebar = () => {
       transition="width 0.2s ease"
     >
       <VStack spacing={4} py={4} alignItems="center">
-        <Box as={RiHome2Line} boxSize="32px" />
+        {/* <Box as={RiHome2Line} boxSize="32px" /> */}
+        <Image src="/favicon.svg" alt="Logo" boxSize="32px" />
       </VStack>
       <VStack pt={4} spacing={0} justifyContent="center" alignItems="flex-start" flexGrow={1} w="full">
         {user ? <UserMenuItems isOpen={isOpen} /> : <GuestMenuItems isOpen={isOpen} />}

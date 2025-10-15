@@ -440,6 +440,7 @@ export default function FileExplorer({ onFileSelect, onRefresh, readOnly = false
           onDelete={handleDelete}
           onSelect={(file) => {
             setSelectedPath(file.path)
+            console.log('selectedPath', selectedPath)
             if (onFileSelect) onFileSelect(file)
           }}
           onCreateFolder={handleCreateFolder}
