@@ -23,7 +23,7 @@ interface FileUploadProps {
   currentFolder?: string
 }
 
-export default function FileUpload({ onUploadComplete, currentFolder = '/' }: FileUploadProps) {
+export default function FileUpload({ onUploadComplete, currentFolder = '' }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const folderInputRef = useRef<HTMLInputElement>(null)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -87,13 +87,18 @@ export default function FileUpload({ onUploadComplete, currentFolder = '/' }: Fi
       const formData = new FormData()
       const relativePaths: string[] = []
       selectedFiles.forEach((file) => {
+        // if(currentFolder !== "" && !file.name.includes(currentFolder)) {
+        //   const new_name = currentFolder + '/' + file.name
+        //   const new_file = new File([file], new_name, { type: file.type })
+        //   formData.append('files', new_file)
+        // } else {
+        //   formData.append('files', file)
+        // }
         formData.append('files', file)
-        // webkitRelativePath preserves folder hierarchy when folder upload is used
-        // For regular file selection, this may be empty and that's fine
-        // @ts-ignore
         const rp = (file as any).webkitRelativePath || ''
         relativePaths.push(rp)
       })
+      console.log('[handleUpload] currentFolder => ', currentFolder)
       formData.append('folder_path', currentFolder)
       try {
         formData.append('relative_paths', JSON.stringify(relativePaths))

@@ -36,6 +36,7 @@ interface FileNode {
   path: string
   folder_path: string
   uploaded_at: string
+  display_name: string
   children?: FileNode[]
 }
 
@@ -163,7 +164,7 @@ function FileTreeItem({
           fontWeight={isFolder ? 'semibold' : 'normal'}
           color={nameColor}
         >
-          {node.name}
+          {node.display_name || node.name}
         </Text>
         
         {/* File Size */}
@@ -255,11 +256,31 @@ export default function FileExplorer({ onFileSelect, onRefresh, readOnly = false
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const toast = useToast()
 
+  const deriveDisplayName = (name: string) => {
+    if (!name) return name
+    const parts = name.split('/')
+    return parts[parts.length - 1] || name
+  }
+
+  const deriveFolderPath = (name: string) => {
+    if (!name) return ''
+    const idx = name.lastIndexOf('/')
+    return idx === -1 ? '' : name.slice(0, idx)
+  }
+
+  const withDisplayName = (node: FileNode): FileNode => {
+    const display_name = deriveDisplayName(node.name)
+    const computedFolderPath = deriveFolderPath(node.name)
+    const children = node.children ? node.children.map(withDisplayName) : undefined
+    return { ...node, display_name, folder_path: computedFolderPath, children }
+  }
+
   const loadFileTree = async () => {
     setIsLoading(true)
     try {
       const response = await apiClient.get('/files/tree')
-      setFileTree(response.data)
+      const withNames = (response.data as FileNode[]).map(withDisplayName)
+      setFileTree(withNames)
     } catch (error: any) {
       console.error('Failed to load file tree:', error)
       toast({

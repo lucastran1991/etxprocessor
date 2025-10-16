@@ -1,6 +1,6 @@
 'use client'
 
-import { Box, Container, Heading, Text, VStack, Grid, GridItem, Card, CardBody, Stat, StatLabel, StatNumber, StatHelpText, StatArrow, useColorModeValue, HStack, Badge, Table, Thead, Tr, Th, Tbody, Td, Avatar, Button, SimpleGrid } from '@chakra-ui/react'
+import { Box, Container, Heading, Text, VStack, Grid, GridItem, Card, CardBody, Stat, StatLabel, StatNumber, StatHelpText, StatArrow, useColorModeValue, HStack, Badge, Table, Thead, Tr, Th, Tbody, Td, Avatar, Button, SimpleGrid, Center, Spinner } from '@chakra-ui/react'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/layout/Layout'
 import { useEffect, useState } from 'react'
@@ -49,7 +49,10 @@ export default function Dashboard() {
     return (
       <Layout>
         <Container maxW="7xl" py={10}>
-          <Text>Loading...</Text>
+          <Center>
+            <Spinner size="xl" />
+            <Text ml={4}>Loading...</Text>
+          </Center>
         </Container>
       </Layout>
     )

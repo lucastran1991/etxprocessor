@@ -41,7 +41,7 @@ export default function LoginForm({ showRegisterLink = true }: LoginFormProps) {
     setError('')
     
     try {
-      await login(data.username, data.password)
+      await login(data.username, data.password, data.remember)
       router.push('/')
     } catch (err) {
       setError('Invalid username or password')

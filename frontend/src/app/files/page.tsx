@@ -17,6 +17,8 @@ import {
   StatLabel,
   StatNumber,
   StatGroup,
+  Spinner,
+  Center,
 } from '@chakra-ui/react'
 import Layout from '@/components/layout/Layout'
 import { useAuth } from '@/hooks/useAuth'
@@ -35,6 +37,7 @@ export default function FilesPage() {
   } | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [selectedFile, setSelectedFile] = useState<any | null>(null)
+  const [selectedFolder, setSelectedFolder] = useState("")
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -69,11 +72,19 @@ export default function FilesPage() {
     // if files changed, clear preview if deleted; keep selection otherwise
   }
 
+  // Determine current upload target folder based on selection
+  const currentUploadFolder = selectedFile
+    ? (selectedFile.type === 'folder' ? (selectedFile.path || '/') : (selectedFile.folder_path || '/'))
+    : '/'
+
   if (isLoading || !user) {
     return (
       <Layout>
         <Container maxW="container.xl" py={10}>
-          <Text>Loading...</Text>
+          <Center>
+            <Spinner size="xl" />
+            <Text ml={4}>Loading...</Text>
+          </Center>
         </Container>
       </Layout>
     )
@@ -117,7 +128,17 @@ export default function FilesPage() {
                   <FileExplorer
                     key={refreshKey}
                     onRefresh={handleUploadComplete}
-                    onFileSelect={(f) => setSelectedFile(f)}
+                    onFileSelect={(f) => {
+                      console.log('selectedFile => ', f)
+                      setSelectedFile(f)
+                      if (f.name) {
+                        const temp_path = f.name.split('/').slice(0, -1).join('/')
+                        console.log('temp_path => ', temp_path)
+                        setSelectedFolder(temp_path || "")
+                      } else {
+                        setSelectedFolder("")
+                      }
+                    }}
                   />
                 </CardBody>
               </Card>
@@ -131,7 +152,7 @@ export default function FilesPage() {
                 </CardHeader>
                 <Divider />
                 <CardBody>
-                  <FileUpload onUploadComplete={handleUploadComplete} />
+                  <FileUpload onUploadComplete={handleUploadComplete} currentFolder={selectedFolder} />
                 </CardBody>
               </Card>
 
