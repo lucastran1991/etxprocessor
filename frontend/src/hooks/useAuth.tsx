@@ -19,7 +19,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   isLoading: boolean
-  login: (username: string, password: string) => Promise<void>
+  login: (username: string, password: string, remember: boolean) => Promise<void>
   register: (username: string, email: string, password: string, role?: string, avatar?: string) => Promise<void>
   logout: () => void
   updateUserAvatar: (avatarUrl?: string) => void
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string, remember: boolean) => {
     const formData = new FormData()
     formData.append('username', username)
     formData.append('password', password)
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     const { access_token } = response.data
-    Cookies.set('access_token', access_token, { expires: 7 })
+    Cookies.set('access_token', access_token, { expires: remember ? 7 : undefined })
     
     // Get user data
     const userResponse = await apiClient.get('/auth/me')

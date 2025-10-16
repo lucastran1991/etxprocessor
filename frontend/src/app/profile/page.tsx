@@ -17,7 +17,9 @@ import {
   FormLabel,
   Input,
   useColorModeValue,
-  useToast
+  useToast,
+  Center,
+  Spinner
 } from '@chakra-ui/react'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/layout/Layout'
@@ -105,7 +107,10 @@ export default function Profile() {
     return (
       <Layout>
         <Container maxW="4xl" py={10}>
-          <Text>Loading...</Text>
+          <Center>
+            <Spinner size="xl" />
+            <Text ml={4}>Loading...</Text>
+          </Center>
         </Container>
       </Layout>
     )
