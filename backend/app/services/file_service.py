@@ -59,6 +59,12 @@ class FileService:
             )
         ).order_by(File.is_folder.desc(), File.original_filename).all()
 
+    def get_all_user_files(self, user_id: str) -> List[File]:
+        """Get all files for a user regardless of folder"""
+        return self.db.query(File).filter(
+            File.user_id == user_id
+        ).order_by(File.is_folder.desc(), File.original_filename).all()
+        
     def get_file_by_id(self, file_id: str, user_id: str) -> Optional[File]:
         """Get a specific file by ID"""
         return self.db.query(File).filter(
@@ -91,8 +97,8 @@ class FileService:
             return (None, None)
         if not f.filename:
             return (None, None)
-        fname, ext = os.path.splitext(os.path.basename(f.filename))
-        return (fname, ext if ext else None)
+        _, ext = os.path.splitext(os.path.basename(f.filename))
+        return (f.filename, ext if ext else None)
 
     def get_file_name(self, file_id: str, user_id: str) -> Optional[str]:
         """Get the file name for a user's file. Returns None if not found or is a folder."""
@@ -103,7 +109,14 @@ class FileService:
             return None
         fname, _ = os.path.splitext(os.path.basename(f.filename))
         return fname or None
-    
+
+    def get_folder_path(self, file_id: str, user_id: str) -> Optional[str]:
+        """Get the folder path for a user's file. Returns None if not found."""
+        f = self.get_file_by_id(file_id, user_id)
+        if not f:
+            return None
+        return f.folder_path
+
     def ensure_folder_hierarchy(self, user_id: str, folder_path: str) -> None:
         """Ensure that all folders in the given folder_path exist for the user."""
         if not folder_path or folder_path == '/':

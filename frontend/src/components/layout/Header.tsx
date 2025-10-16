@@ -29,10 +29,9 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link'
 import { getImageUrl } from '@/utils/imageUrl';
 
-// Define types for NavItem props
 interface NavItemProps {
   href: string;
-  icon: typeof FaUserCircle; // Assuming icon has a default type like FaUser
+  icon: typeof FaUserCircle;
   children: React.ReactNode;
   isOpen: boolean;
   boxSize: string;
@@ -41,7 +40,6 @@ interface NavItemProps {
 const NavItem: React.FC<NavItemProps> = ({ href, icon, children, isOpen, boxSize }) => {
   const pathname = usePathname();
   const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
-  // NavItem renderer logic
   return (
     <ChakraLink
       as={Link}
@@ -50,7 +48,6 @@ const NavItem: React.FC<NavItemProps> = ({ href, icon, children, isOpen, boxSize
       alignItems="center"
       p={4}
       w="full"
-      // rounded="md"
       _hover={{ textDecoration: 'none', bg: useColorModeValue('brand.400', 'gray.900') }}
       bg={isActive ? useColorModeValue('brand.600', 'whiteAlpha.200') : 'transparent'}
       color={isActive ? useColorModeValue('whiteAlpha.900', 'brand.200') : undefined}
@@ -69,7 +66,6 @@ const Sidebar = () => {
   const bg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
-  // Sidebar renderer logic
   return (
     <Box
       as="nav"
@@ -82,14 +78,13 @@ const Sidebar = () => {
       borderRight="1px"
       borderColor={borderColor}
       zIndex="sticky"
-      boxShadow="base" // Add shadow effect
+      boxShadow="base"
       overflowY="auto"
       onMouseEnter={onOpen}
       onMouseLeave={onClose}
       transition="width 0.2s ease"
     >
       <VStack spacing={4} py={4} alignItems="center">
-        {/* <Box as={RiHome2Line} boxSize="32px" /> */}
         <Image src="/favicon.svg" alt="Logo" boxSize="32px" />
       </VStack>
       <VStack pt={4} spacing={0} justifyContent="center" alignItems="flex-start" flexGrow={1} w="full">
@@ -130,18 +125,18 @@ const Sidebar = () => {
 
 const UserMenuItems: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
   <>
-    <NavItem href="/dashboard" icon={MdOutlineSpaceDashboard} isOpen={isOpen} boxSize="30px">Dashboard</NavItem>
-    <NavItem href="/config" icon={IoIosCog} isOpen={isOpen} boxSize="30px">Configuration</NavItem>
-    <NavItem href="/files" icon={FaRegFileAlt} isOpen={isOpen} boxSize="30px">My Files</NavItem>
-    <NavItem href="/processing" icon={GrAction} isOpen={isOpen} boxSize="30px">Processing</NavItem>
-    <NavItem href="/profile" icon={CgProfile} isOpen={isOpen} boxSize="30px">Profile</NavItem>
+    <NavItem href="/dashboard" icon={MdOutlineSpaceDashboard} isOpen={isOpen} boxSize="28px">Dashboard</NavItem>
+    <NavItem href="/config" icon={IoIosCog} isOpen={isOpen} boxSize="28px">Configuration</NavItem>
+    <NavItem href="/files" icon={FaRegFileAlt} isOpen={isOpen} boxSize="28px">My Files</NavItem>
+    <NavItem href="/processing" icon={GrAction} isOpen={isOpen} boxSize="28px">Processing</NavItem>
+    <NavItem href="/profile" icon={CgProfile} isOpen={isOpen} boxSize="28px">Profile</NavItem>
   </>
 );
 
 const GuestMenuItems: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
   <>
-    <NavItem href="/login" icon={MdLogin} isOpen={isOpen} boxSize="30px">Login</NavItem>
-    <NavItem href="/register" icon={SlNotebook} isOpen={isOpen} boxSize="30px">Register</NavItem>
+    <NavItem href="/login" icon={MdLogin} isOpen={isOpen} boxSize="28px">Login</NavItem>
+    <NavItem href="/register" icon={SlNotebook} isOpen={isOpen} boxSize="28px">Register</NavItem>
   </>
 );
 

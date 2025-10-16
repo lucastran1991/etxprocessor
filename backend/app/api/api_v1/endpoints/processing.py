@@ -46,12 +46,12 @@ async def ingest_es(
 
 @router.post("/ingestbar")
 async def ingest_bar(
-    data_folder: Optional[str] = Form(None),
+    data_file: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     try:
-        msg = processing_service.ingestbar(data_folder=data_folder, db=db, user=current_user)
+        msg = processing_service.ingestbar(data_file=data_file, db=db, user=current_user)
         return {"message": msg}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

@@ -34,6 +34,7 @@ interface FileNode {
   size?: number
   mime_type?: string
   path: string
+  folder_path: string
   uploaded_at: string
   children?: FileNode[]
 }

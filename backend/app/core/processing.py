@@ -16,6 +16,7 @@ from app.models.user import User
 import pandas as pd
 import requests
 import websocket
+import io
 
 
 def _safe_repr(value: Any, maxlen: int = 200) -> str:
@@ -289,11 +290,24 @@ class ProcessingService:
         return df
 
     @log_call
-    def publish_bar_data(self, es_id: str, bar_name: str, csv_data: str) -> bool:
+    def publish_bar_data(
+        self,
+        es_id: str,
+        bar_name: str,
+        csv_data: str,
+    ) -> bool:
+
+        self.logger.info(
+            f"Publishing BAR data for ES ID: {es_id} and Bar Name: {bar_name}"
+        )
+
         payload = json.dumps(
             {"esId": es_id, "bartName": bar_name, "data": {"csv": csv_data}}
         )
+        self.logger.info("--------------------------------")
         self.logger.info("Publishing BAR data")
+        self.logger.info(f"Payload: {payload}")
+
         try:
             response = self.ext_request(
                 method="POST", api_name="PublishBARData", data=payload
@@ -317,16 +331,54 @@ class ProcessingService:
 
     # ------------------------------ processing --------------------------------
     @log_call
-    def process_csv_file(self, file_path: str) -> None:
+    def process_csv_file(
+        self,
+        data_file: Optional[str] = None,
+        file_path: Optional[str] = None,
+        db: Session = None,
+        user: User = None,
+    ) -> None:
+
+        self.logger.info(f"Processing file: {data_file} or {file_path}")
+
         if self.ess_df is None:
             raise RuntimeError("ESS dataframe not loaded")
 
-        csv_data_df = pd.read_csv(file_path)
+        self.logger.info("ESS dataframe loaded")
+
+        csv_data_df = None
+        bar_name = None
+
+        if data_file:
+            file_service = FileService(db)
+            file_obj = file_service.get_file_by_id(data_file, str(user.id))
+
+            if not file_obj or file_obj.is_folder or file_obj.mime_type != "text/csv":
+                raise RuntimeError("Invalid file")
+
+            file_bytes = file_service.get_file_content(data_file, str(user.id))
+            csv_string = file_bytes.decode("utf-8", errors="replace")
+            csv_string = csv_string.replace("\r\n", "\n")
+            csv_data_df = pd.read_csv(io.StringIO(csv_string))
+            bar_name = file_obj.original_filename.split(".")[0].split("/")[-1]
+            if not bar_name:
+                bar_name = file_obj.original_filename.split(".")[0]
+        else:
+            csv_data_df = pd.read_csv(file_path)
+            bar_name = os.path.splitext(os.path.basename(file_path))[0]
+
+        if csv_data_df is None:
+            raise RuntimeError("CSV data dataframe not loaded")
+
+        # Process CSV data
+        self.logger.info("--------------------------------")
+        self.logger.info(f"CSV File Name: {bar_name}")
+        self.logger.info(f"CSV String: {csv_string}")
+        self.logger.info(f"CSV Data DataFrame: {csv_data_df}")
+
         es_column = "emissionSourceName"
         full_org_column = "orgFullName"
         full_es_column = "EsFullName"
-
-        bar_name = os.path.splitext(os.path.basename(file_path))[0]
 
         if (full_org_column in csv_data_df.columns) and (
             es_column in csv_data_df.columns
@@ -373,7 +425,7 @@ class ProcessingService:
         for root, _dirs, files in os.walk(data_folder):
             for file in files:
                 if file.endswith(".csv"):
-                    self.process_csv_file(os.path.join(root, file))
+                    self.process_csv_file(file_path=os.path.join(root, file))
         return True
 
     # ------------------------------- public APIs -------------------------------
@@ -473,15 +525,19 @@ class ProcessingService:
 
     @log_call
     def ingestbar(
-        self, 
-        data_folder: Optional[str] = None, 
-        db: Session = None, 
-        user: User = None, 
-        mid: Optional[str] = str(uuid.uuid4())
+        self,
+        data_file: Optional[str] = None,
+        db: Session = None,
+        user: User = None,
+        mid: Optional[str] = str(uuid.uuid4()),
     ) -> str:
 
-        config = self.load_config()
-        folder = config.get("ServerFileFolder", "")
+        file_service = FileService(db)
+        data_folder = file_service.get_folder_path(data_file, str(user.id))
+        if not data_folder:
+            return "error file not found"
+        self.logger.info(f"[ingestbar] input data_folder: {data_folder}")
+
         self.es_error_count = 0
         self.es_success_count = 0
         self.ess_df = self.get_all_es()
@@ -489,8 +545,38 @@ class ProcessingService:
         start_time = datetime.now()
         self.logger.info(f"Start Time: {start_time}")
 
-        self.process_folder(data_folder=os.path.join(folder, data_folder or ""))
-        
+        # self.process_folder(data_folder=os.path.join(folder, data_folder or ""))
+
+        self.logger.info(f"Checking files in folder: {data_folder} for user: {user.id}")
+
+        files = file_service.get_user_files(
+            user_id=str(user.id), folder_path=data_folder
+        )
+        # files = file_service.get_all_user_files(str(user.id))
+
+        for file in files:
+            if file.is_folder or file.mime_type != "text/csv":
+                self.logger.info(
+                    f"Skipping file: {file.original_filename} because it is a folder or not a CSV file"
+                )
+                continue
+
+            self.logger.info("--------------------------------")
+            self.logger.info(f"Processing file: {file.original_filename}")
+            self.logger.info(f"File ID: {file.id}")
+            self.logger.info(f"File Path: {file.file_path}")
+            self.logger.info(f"File Size: {file.file_size}")
+            self.logger.info(f"File MIME Type: {file.mime_type}")
+            self.logger.info(f"File Folder Path: {file.folder_path}")
+            self.logger.info(f"File Is Folder: {file.is_folder}")
+            self.logger.info(f"File Parent ID: {file.parent_id}")
+            self.logger.info(f"File Uploaded At: {file.uploaded_at}")
+            self.logger.info(f"File Updated At: {file.updated_at}")
+
+            self.process_csv_file(
+                data_file=file.id, file_path=file.file_path, db=db, user=user
+            )
+
         end_time = datetime.now()
         self.logger.info(f"End Time: {end_time}")
         return "Successfully!!"
@@ -503,12 +589,12 @@ class ProcessingService:
             {"CreateTenantAccount": {"Name": tenant_name, "AutoCreateDatabase": True}}
         )
 
-        print("[addtenant] payload: ", payload)
+        self.logger.info(f"[addtenant] payload: {payload}")
         ws.send(payload)
         response = self.wait_for_response(ws)
         status = response.get("status", "error") or "error"
-        print("[addtenant] status: ", status)
-        print("[addtenant] response: ", response)
+        self.logger.info(f"[addtenant] status: {status}")
+        self.logger.info(f"[addtenant] response: {response}")
 
         ws.close()
         return "Successfully!"
@@ -536,7 +622,7 @@ class ProcessingService:
 
         if tenant_name:
             payload = json.dumps({"GetOrgs": {"mid": mid}})
-            print("[createorg] payload: ", payload)
+            self.logger.info(f"[createorg] payload: {payload}")
             ws.send(payload)
             resp = self.wait_for_response(ws) or {}
             dict_org = (resp.get("GetOrgs", {}) or {}).get("Orgs", {})
@@ -545,7 +631,7 @@ class ProcessingService:
                 if value.get("name") == tenant_name:
                     org_id = key
             setorg = json.dumps({"SetOrg": {"mid": mid, "id": org_id}})
-            print("[createorg] setorg: ", setorg)
+            self.logger.info(f"[createorg] setorg: {setorg}")
             ws.send(setorg)
             _ = self.wait_for_response(ws)
 
@@ -553,12 +639,12 @@ class ProcessingService:
             {"CreateOrgStructureFromCsv": {"mid": mid, "data": csv_string}}
         )
 
-        print("[createorg] payload: ", payload)
+        self.logger.info(f"[createorg] payload: {payload}")
         ws.send(payload)
         response = self.wait_for_response(ws)
         status = response.get("status", "error") or "error"
-        print("[createorg] status: ", status)
-        print("[createorg] response: ", response)
+        self.logger.info(f"[createorg] status: {status}")
+        self.logger.info(f"[createorg] response: {response}")
 
         ws.close()
         return "Successfully!"
@@ -581,12 +667,12 @@ class ProcessingService:
             }
         )
 
-        print("[updateversion] payload: ", payload)
+        self.logger.info(f"[updateversion] payload: {payload}")
         ws.send(payload)
         response = self.wait_for_response(ws)
         status = response.get("status", "error") or "error"
-        print("[updateversion] status: ", status)
-        print("[updateversion] response: ", response)
+        self.logger.info(f"[updateversion] status: {status}")
+        self.logger.info(f"[updateversion] response: {response}")
 
         ws.close()
         return "Successfully!"

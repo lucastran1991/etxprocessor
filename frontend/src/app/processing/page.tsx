@@ -51,11 +51,9 @@ export default function ProcessingPage() {
 
   const handleProcessing = async () => {
     if (!selectedFile || !action) return;
-
-    console.log('selectedFile', selectedFile)
-    console.log('action', action)
-
+    console.log('selectedFile: ', selectedFile, 'action: ', action)
     setIsProcessing(true)
+
     try {
       const formData = new FormData();
       formData.append('data_file', selectedFile.id);
@@ -125,7 +123,14 @@ export default function ProcessingPage() {
                 </CardHeader>
                 <Divider />
                 <CardBody maxH="800px" overflowY="auto">
-                  <FileExplorer readOnly hideItemDelete onFileSelect={(f: FileNode) => { if (f.type === 'file') setSelectedFile(f) }} />
+                  <FileExplorer readOnly hideItemDelete onFileSelect={
+                    (f: FileNode) => { 
+                        if (f.type === 'file') {
+                          setSelectedFile(f)
+                          console.log('selectedFile', f)
+                        }
+                      }
+                    } />
                 </CardBody>
               </Card>
             </GridItem>
