@@ -217,7 +217,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/etxprocessor
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/etxprocessor
       - SECRET_KEY=your-secret-key
       - AWS_ACCESS_KEY_ID=your-access-key
       - AWS_SECRET_ACCESS_KEY=your-secret-key
@@ -249,7 +249,7 @@ volumes:
 ```bash
 # .env.example
 # Backend
-DATABASE_URL=postgresql://user:password@localhost:5432/etxprocessor
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/etxprocessor
 SECRET_KEY=your-secret-key-here
 AWS_ACCESS_KEY_ID=your-aws-access-key
 AWS_SECRET_ACCESS_KEY=your-aws-secret-key

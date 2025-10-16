@@ -49,7 +49,7 @@ start_backend() {
         # Resolve DATABASE_URL (prefer existing env). If absent, pick Postgres when available, else SQLite
         if [ -z "${DATABASE_URL}" ]; then
             if check_port 5432; then
-                export DATABASE_URL="postgresql://user:password@127.0.0.1:5432/etxprocessor"
+                export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/etxprocessor"
                 echo -e "${BLUE}🗄️  Using PostgreSQL at ${DATABASE_URL}${NC}"
             else
                 export DATABASE_URL="sqlite:///app/models/your_database.db"
