@@ -45,9 +45,27 @@ start_backend() {
         
         echo -e "${BLUE}📥 Installing backend dependencies...${NC}"
         pip install -r requirements.txt
-        
-        echo -e "${BLUE}🗄️  Running database migrations...${NC}"
-        alembic upgrade head
+
+        # Resolve DATABASE_URL (prefer existing env). If absent, pick Postgres when available, else SQLite
+        if [ -z "${DATABASE_URL}" ]; then
+            if check_port 5432; then
+                export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/etxprocessor"
+                echo -e "${BLUE}🗄️  Using PostgreSQL at ${DATABASE_URL}${NC}"
+            else
+                export DATABASE_URL="sqlite:///app/models/your_database.db"
+                echo -e "${YELLOW}⚠️  PostgreSQL not available; falling back to SQLite (${DATABASE_URL})${NC}"
+            fi
+        else
+            echo -e "${BLUE}🗄️  Using DATABASE_URL from environment${NC}"
+        fi
+
+        # Run Alembic only when targeting PostgreSQL
+        if [[ "${DATABASE_URL}" == postgresql* ]]; then
+            echo -e "${BLUE}🗄️  Running database migrations...${NC}"
+            alembic upgrade head
+        else
+            echo -e "${YELLOW}⏭️  Skipping Alembic migrations for SQLite; relying on AUTO_CREATE_DB${NC}"
+        fi
         
         echo -e "${BLUE}🔧 Starting FastAPI server...${NC}"
         # Write to unified system.log with [BE] tag

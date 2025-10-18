@@ -63,9 +63,14 @@ def run_migrations_online() -> None:
 
     """
     ini_section = config.get_section(config.config_ini_section, {})
-    db_url = ini_section.get("sqlalchemy.url")
-    if db_url and "localhost" in db_url:
-        ini_section["sqlalchemy.url"] = db_url.replace("localhost", "127.0.0.1")
+    # Prefer DATABASE_URL from environment when present (keeps alembic aligned with app runtime)
+    env_db_url = os.environ.get("DATABASE_URL")
+    if env_db_url:
+        ini_section["sqlalchemy.url"] = env_db_url
+    else:
+        db_url = ini_section.get("sqlalchemy.url")
+        if db_url and "localhost" in db_url:
+            ini_section["sqlalchemy.url"] = db_url.replace("localhost", "127.0.0.1")
 
     connectable = engine_from_config(
         ini_section,

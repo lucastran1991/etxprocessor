@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Database
-    DATABASE_URL: str = "postgresql://user:password@localhost:5432/etxprocessor"
+    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/etxprocessor"
     
     # Security
     SECRET_KEY: str = "your-secret-key-here-change-in-production"
