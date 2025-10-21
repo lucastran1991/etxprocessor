@@ -32,7 +32,10 @@ interface FileNode {
   size?: number
   mime_type?: string
   path: string
+  folder_path: string
   uploaded_at: string
+  display_name: string
+  children?: FileNode[]
 }
 
 export default function ProcessingPage() {
@@ -152,6 +155,7 @@ export default function ProcessingPage() {
                     </HStack>
                     {selectedFile ? (
                       <VStack align="start" spacing={1} fontSize="sm">
+                        <HStack><Badge>Folder</Badge><Text>{selectedFile.folder_path || ''}</Text></HStack>
                         <HStack><Badge>File</Badge><Text>{selectedFile.name}</Text></HStack>
                         {selectedFile.size !== undefined && <HStack><Badge>Size</Badge><Text>{selectedFile.size} bytes</Text></HStack>}
                         <HStack><Badge>Uploaded</Badge><Text>{new Date(selectedFile.uploaded_at).toLocaleString()}</Text></HStack>

@@ -118,9 +118,10 @@ export default function AvatarUpload({
   const handleDelete = async () => {
     setIsUploading(true)
     try {
-      await apiClient.delete('/upload/avatar')
-      setPreviewUrl(undefined)
-      onAvatarUpdate(null)
+      const { data } = await apiClient.delete('/upload/avatar')
+      const newUrl: string | undefined = data?.avatar_url
+      setPreviewUrl(newUrl)
+      onAvatarUpdate(newUrl ?? null)
 
       toast({
         title: 'Success',

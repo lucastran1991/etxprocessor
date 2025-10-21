@@ -8,6 +8,7 @@ import os
 import shutil
 
 from app.core.config import settings
+from typing import Set
 
 # Only import boto3 if S3 is configured
 if settings.STORAGE_TYPE == "s3":
@@ -74,6 +75,33 @@ class StorageService:
             return self._delete_from_s3(file_path)
         else:
             return self._delete_from_local(file_path)
+
+    def is_seeded_default_avatar(self, file_path_or_url: str) -> bool:
+        """Determine if the given path/URL points to a seeded default avatar.
+
+        Seeded defaults live under uploads/avatars and originate from the project's
+        avatar asset directory. We treat any path under '/uploads/avatars/' that
+        points to an existing static file whose filename exists in the source
+        avatar directory as seeded and skip deletion.
+        """
+        try:
+            # Only relevant for local storage
+            if self.storage_type != "local":
+                return False
+            # Normalize to relative path from uploads
+            rel = file_path_or_url[9:] if file_path_or_url.startswith('/uploads/') else file_path_or_url
+            # Only consider avatars subdir
+            if not rel.startswith(f"{settings.AVATAR_UPLOAD_SUBDIR}/"):
+                return False
+            # Compare filename against source assets list
+            filename = Path(rel).name
+            source_dir = Path(settings.AVATAR_SOURCE_DIR)
+            if not source_dir.exists() or not source_dir.is_dir():
+                return False
+            source_names: Set[str] = {p.name for p in source_dir.iterdir() if p.is_file()}
+            return filename in source_names
+        except Exception:
+            return False
     
     def get_file_url(self, file_path: str) -> str:
         """

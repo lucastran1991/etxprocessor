@@ -76,9 +76,10 @@ async def upload_avatar(
     # Update user's avatar URL
     user_service = UserService(db)
     
-    # Delete old avatar if it exists
+    # Delete old avatar if it exists and is not a seeded default
     if current_user.avatar_url:
-        storage_service.delete_file(current_user.avatar_url)
+        if not storage_service.is_seeded_default_avatar(current_user.avatar_url):
+            storage_service.delete_file(current_user.avatar_url)
     
     # Update user
     from app.schemas.user import UserUpdate
@@ -111,16 +112,15 @@ async def delete_avatar(
             detail="No avatar to delete"
         )
     
-    # Delete from storage
-    storage_service.delete_file(current_user.avatar_url)
+    # Delete from storage if it's a user-uploaded file, skip seeded defaults
+    if not storage_service.is_seeded_default_avatar(current_user.avatar_url):
+        storage_service.delete_file(current_user.avatar_url)
     
-    # Update user to remove avatar
+    # Pick a random default avatar and set it immediately
     user_service = UserService(db)
     from app.schemas.user import UserUpdate
-    updated_user = user_service.update_user(
-        str(current_user.id),
-        UserUpdate(avatar_url=None)
-    )
+    default_url = user_service.pick_random_default_avatar_url()
+    updated_user = user_service.update_user(str(current_user.id), UserUpdate(avatar_url=default_url))
     
     if not updated_user:
         raise HTTPException(
@@ -128,5 +128,5 @@ async def delete_avatar(
             detail="Failed to delete user avatar"
         )
     
-    return {"message": "Avatar deleted successfully"}
+    return {"message": "Avatar deleted successfully", "avatar_url": default_url}
 

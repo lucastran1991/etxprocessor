@@ -11,6 +11,28 @@ class UserService:
     def __init__(self, db: Session):
         self.db = db
 
+    def pick_random_default_avatar_url(self) -> Optional[str]:
+        """Return a random default avatar URL from the seeded uploads/avatars directory.
+
+        This inspects the local uploads folder (mounted at /uploads) to find available
+        default avatars that were seeded from the project's avatar assets directory.
+        """
+        try:
+            if settings.STORAGE_TYPE == "local":
+                avatars_dir = os.path.join(settings.LOCAL_UPLOAD_DIR, settings.AVATAR_UPLOAD_SUBDIR)
+                if os.path.isdir(avatars_dir):
+                    candidates = [
+                        f for f in os.listdir(avatars_dir)
+                        if os.path.isfile(os.path.join(avatars_dir, f)) and f.lower().split('.')[-1] in {"jpg","jpeg","png","webp"}
+                    ]
+                    if candidates:
+                        chosen = random.choice(candidates)
+                        return f"/uploads/{settings.AVATAR_UPLOAD_SUBDIR}/{chosen}"
+        except Exception:
+            # Non-fatal; return None on any error
+            return None
+        return None
+
     def get_user_by_id(self, user_id: str) -> Optional[User]:
         return self.db.query(User).filter(User.id == user_id).first()
 
@@ -23,22 +45,7 @@ class UserService:
     def create_user(self, user_data: UserCreate) -> User:
         hashed_password = get_password_hash(user_data.password)
         # Assign a default avatar from uploads/avatars if none provided
-        default_avatar_url = None
-        try:
-            if settings.STORAGE_TYPE == "local":
-                avatars_dir = os.path.join(settings.LOCAL_UPLOAD_DIR, settings.AVATAR_UPLOAD_SUBDIR)
-                if os.path.isdir(avatars_dir):
-                    candidates = [
-                        f for f in os.listdir(avatars_dir)
-                        if os.path.isfile(os.path.join(avatars_dir, f)) and f.lower().split('.')[-1] in {"jpg","jpeg","png","webp"}
-                    ]
-                    if candidates:
-                        chosen = random.choice(candidates)
-                        # Public URL path under /uploads
-                        default_avatar_url = f"/uploads/{settings.AVATAR_UPLOAD_SUBDIR}/{chosen}"
-        except Exception:
-            # Non-fatal; leave as None if any error occurs
-            default_avatar_url = None
+        default_avatar_url = self.pick_random_default_avatar_url()
 
         db_user = User(
             username=user_data.username,

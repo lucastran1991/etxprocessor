@@ -24,14 +24,17 @@ import {
 } from '@chakra-ui/react'
 import { getImageUrl } from '@/utils/imageUrl'
 
-interface FileNodeLike {
+interface FileNode {
   id: string
   name: string
   type: 'file' | 'folder'
   size?: number
-  mime_type?: string | null
+  mime_type?: string
   path: string
+  folder_path: string
   uploaded_at: string
+  display_name: string
+  children?: FileNode[]
 }
 
 function formatBytes(bytes?: number) {
