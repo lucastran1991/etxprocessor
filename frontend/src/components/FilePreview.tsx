@@ -64,7 +64,7 @@ function isJson(mime?: string | null, name?: string) {
   return mime === 'application/json'
 }
 
-export default function FilePreview({ file }: { file: FileNodeLike | null }) {
+export default function FilePreview({ file }: { file: FileNode | null }) {
   const [csvRows, setCsvRows] = useState<string[][] | null>(null)
   const [jsonText, setJsonText] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
