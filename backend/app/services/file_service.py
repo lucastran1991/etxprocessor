@@ -11,11 +11,24 @@ class FileService:
     def __init__(self, db: Session):
         self.db = db
 
+    def _as_uuid(self, value) -> Optional[uuid.UUID]:
+        """Safely parse a UUID from a string or return None if invalid."""
+        if isinstance(value, uuid.UUID):
+            return value
+        try:
+            return uuid.UUID(str(value))
+        except Exception:
+            return None
+
     def create_file(self, file_data: FileCreate) -> File:
         """Create a new file record"""
+        user_uuid = self._as_uuid(file_data.user_id)
+        parent_uuid = self._as_uuid(file_data.parent_id) if file_data.parent_id else None
+        if not user_uuid:
+            raise ValueError("Invalid user_id for file create")
         db_file = File(
             id=uuid.uuid4(),
-            user_id=file_data.user_id,
+            user_id=user_uuid,
             filename=file_data.filename,
             original_filename=file_data.original_filename,
             file_path=file_data.file_path,
@@ -23,7 +36,7 @@ class FileService:
             mime_type=file_data.mime_type,
             folder_path=file_data.folder_path,
             is_folder=file_data.is_folder,
-            parent_id=file_data.parent_id
+            parent_id=parent_uuid
         )
         self.db.add(db_file)
         self.db.commit()
@@ -32,11 +45,14 @@ class FileService:
 
     def create_folder(self, user_id: str, folder_data: FolderCreate) -> File:
         """Create a new folder"""
+        user_uuid = self._as_uuid(user_id)
+        if not user_uuid:
+            raise ValueError("Invalid user_id for create_folder")
         folder_path = f"{folder_data.parent_path.rstrip('/')}/{folder_data.folder_name}"
         
         db_folder = File(
             id=uuid.uuid4(),
-            user_id=user_id,
+            user_id=user_uuid,
             filename=folder_data.folder_name,
             original_filename=folder_data.folder_name,
             file_path=folder_path,
@@ -52,25 +68,35 @@ class FileService:
 
     def get_user_files(self, user_id: str, folder_path: str = "/") -> List[File]:
         """Get all files in a specific folder for a user"""
+        user_uuid = self._as_uuid(user_id)
+        if not user_uuid:
+            return []
         return self.db.query(File).filter(
             and_(
-                File.user_id == user_id,
+                File.user_id == user_uuid,
                 File.folder_path == folder_path
             )
         ).order_by(File.is_folder.desc(), File.original_filename).all()
 
     def get_all_user_files(self, user_id: str) -> List[File]:
         """Get all files for a user regardless of folder"""
+        user_uuid = self._as_uuid(user_id)
+        if not user_uuid:
+            return []
         return self.db.query(File).filter(
-            File.user_id == user_id
+            File.user_id == user_uuid
         ).order_by(File.is_folder.desc(), File.original_filename).all()
         
     def get_file_by_id(self, file_id: str, user_id: str) -> Optional[File]:
         """Get a specific file by ID"""
+        user_uuid = self._as_uuid(user_id)
+        file_uuid = self._as_uuid(file_id)
+        if not user_uuid or not file_uuid:
+            return None
         return self.db.query(File).filter(
             and_(
-                File.id == file_id,
-                File.user_id == user_id
+                File.id == file_uuid,
+                File.user_id == user_uuid
             )
         ).first()
 
@@ -119,6 +145,9 @@ class FileService:
 
     def ensure_folder_hierarchy(self, user_id: str, folder_path: str) -> None:
         """Ensure that all folders in the given folder_path exist for the user."""
+        user_uuid = self._as_uuid(user_id)
+        if not user_uuid:
+            return
         if not folder_path or folder_path == '/':
             return
 
@@ -133,7 +162,7 @@ class FileService:
             # Does this folder exist?
             existing = self.db.query(File).filter(
                 and_(
-                    File.user_id == user_id,
+                    File.user_id == user_uuid,
                     File.is_folder == True,
                     File.folder_path == current_path
                 )
@@ -142,7 +171,7 @@ class FileService:
             if not existing:
                 folder = File(
                     id=uuid.uuid4(),
-                    user_id=user_id,
+                    user_id=user_uuid,
                     filename=part,
                     original_filename=part,
                     file_path=current_path,
@@ -172,9 +201,12 @@ class FileService:
 
     def _delete_folder_contents(self, folder_path: str, user_id: str):
         """Recursively delete all contents of a folder"""
+        user_uuid = self._as_uuid(user_id)
+        if not user_uuid:
+            return
         files = self.db.query(File).filter(
             and_(
-                File.user_id == user_id,
+                File.user_id == user_uuid,
                 File.folder_path.like(f"{folder_path}%")
             )
         ).all()
@@ -184,8 +216,11 @@ class FileService:
 
     def get_file_tree(self, user_id: str) -> List[FileTreeNode]:
         """Get the complete file tree structure for a user"""
+        user_uuid = self._as_uuid(user_id)
+        if not user_uuid:
+            return []
         all_files = self.db.query(File).filter(
-            File.user_id == user_id
+            File.user_id == user_uuid
         ).order_by(File.folder_path, File.is_folder.desc(), File.original_filename).all()
 
         if not all_files:
@@ -296,32 +331,42 @@ class FileService:
 
     def search_files(self, user_id: str, query: str) -> List[File]:
         """Search files by name"""
+        user_uuid = self._as_uuid(user_id)
+        if not user_uuid:
+            return []
         return self.db.query(File).filter(
             and_(
-                File.user_id == user_id,
+                File.user_id == user_uuid,
                 File.original_filename.ilike(f"%{query}%")
             )
         ).all()
 
     def get_storage_usage(self, user_id: str) -> dict:
         """Get total storage usage for a user"""
+        user_uuid = self._as_uuid(user_id)
+        if not user_uuid:
+            return {
+                "total_size": 0,
+                "file_count": 0,
+                "by_type": {"images": 0, "pdf": 0, "csv": 0, "others": 0},
+            }
         total_size = self.db.query(func.sum(File.file_size)).filter(
             and_(
-                File.user_id == user_id,
+                File.user_id == user_uuid,
                 File.is_folder == False
             )
         ).scalar() or 0
 
         file_count = self.db.query(File).filter(
             and_(
-                File.user_id == user_id,
+                File.user_id == user_uuid,
                 File.is_folder == False
             )
         ).count()
         # Category counts
         images_count = self.db.query(func.count()).filter(
             and_(
-                File.user_id == user_id,
+                File.user_id == user_uuid,
                 File.is_folder == False,
                 File.mime_type.isnot(None),
                 File.mime_type.like('image/%')
@@ -329,14 +374,14 @@ class FileService:
         ).scalar() or 0
         pdf_count = self.db.query(func.count()).filter(
             and_(
-                File.user_id == user_id,
+                File.user_id == user_uuid,
                 File.is_folder == False,
                 File.mime_type == 'application/pdf'
             )
         ).scalar() or 0
         csv_count = self.db.query(func.count()).filter(
             and_(
-                File.user_id == user_id,
+                File.user_id == user_uuid,
                 File.is_folder == False,
                 or_(
                     File.mime_type == 'text/csv',

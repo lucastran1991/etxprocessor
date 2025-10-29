@@ -2,10 +2,11 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 from app.core.security import get_password_hash, verify_password
-from typing import Optional, List
+from typing import Optional, List, Union
 import os
 import random
 from app.core.config import settings
+import uuid
 
 class UserService:
     def __init__(self, db: Session):
@@ -33,8 +34,20 @@ class UserService:
             return None
         return None
 
-    def get_user_by_id(self, user_id: str) -> Optional[User]:
-        return self.db.query(User).filter(User.id == user_id).first()
+    def get_user_by_id(self, user_id: Union[str, uuid.UUID]) -> Optional[User]:
+        """Fetch a user by primary key.
+
+        The `users.id` column is a UUID. Accept both `uuid.UUID` and `str` inputs.
+        When a string is provided, attempt to parse it into a UUID for robust
+        cross-driver compatibility (e.g., Postgres UUID type expects uuid.UUID).
+        """
+        try:
+            user_uuid = (
+                user_id if isinstance(user_id, uuid.UUID) else uuid.UUID(str(user_id))
+            )
+        except Exception:
+            return None
+        return self.db.query(User).filter(User.id == user_uuid).first()
 
     def get_user_by_email(self, email: str) -> Optional[User]:
         return self.db.query(User).filter(User.email == email).first()
@@ -67,7 +80,7 @@ class UserService:
             return None
         return user
 
-    def update_user(self, user_id: str, user_data: UserUpdate) -> Optional[User]:
+    def update_user(self, user_id: Union[str, uuid.UUID], user_data: UserUpdate) -> Optional[User]:
         user = self.get_user_by_id(user_id)
         if not user:
             return None
