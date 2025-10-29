@@ -63,8 +63,12 @@ export default function ProcessingPage() {
     setIsProcessing(true)
 
     try {
+      const formDataArray: FormData[] = [];
+      
       const formData = new FormData();
       formData.append('data_file', selectedFile.id);
+
+      formDataArray.push(formData);
 
       let endpoint = '';
       switch (action) {
