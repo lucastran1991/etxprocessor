@@ -15,7 +15,7 @@ import {
   MenuButton,
 } from '@chakra-ui/react';
 import { FaRegFileAlt, FaUserCircle } from 'react-icons/fa';
-import { MdOutlineSpaceDashboard, MdLogin } from 'react-icons/md';
+import { MdOutlineSpaceDashboard, MdLogin, MdLogout } from 'react-icons/md';
 import { RiHome2Line } from 'react-icons/ri';
 import { IoIosCog } from 'react-icons/io';
 import { GrAction } from 'react-icons/gr';
@@ -112,9 +112,16 @@ const Sidebar = () => {
                   src={getImageUrl(user.avatar_url)}                  
                 />
               </MenuButton>
-              <MenuList>
-                <MenuItem onClick={() => logout()}>Logout</MenuItem>
-              </MenuList>
+              {isOpen && <MenuList minW="50px" display="flex" flexDirection="column" alignItems="center">
+                <MenuItem
+                  w="100%"
+                  justifyContent="center"
+                  onClick={() => logout()}
+                  icon={<MdLogout />}
+                >
+                  Logout
+                </MenuItem>
+              </MenuList>}
             </Menu>
           </Box>
         )}

@@ -17,7 +17,10 @@ import {
   HStack,
   Badge,
   Spinner,
-  useToast
+  useToast,
+  Switch,
+  FormControl,
+  FormLabel
 } from '@chakra-ui/react'
 import Layout from '@/components/layout/Layout'
 import { useAuth } from '@/hooks/useAuth'
@@ -44,6 +47,8 @@ export default function ProcessingPage() {
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null)
   const [action, setAction] = useState<string>('Import Organizations')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [deleteAfterProcess, setDeleteAfterProcess] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
   const toast = useToast();
 
   useEffect(() => {
@@ -86,12 +91,39 @@ export default function ProcessingPage() {
       })
       const result = response.data;
       toast({
-        title: 'Processing Completed',
+        title: selectedFile.name + ' - Processing Completed',
         description: result.message || '',
         status: 'success',
         duration: 5000,
         isClosable: true,
       });
+
+      // Delete file after successful processing if toggle is active
+      if (deleteAfterProcess && selectedFile) {
+        try {
+          await apiClient.delete(`/files/${selectedFile.id}`);
+          console.log('File deleted: ', selectedFile.name)
+          // toast({
+          //   title: 'File Deleted',
+          //   description: `File "${selectedFile.name}" has been deleted successfully.`,
+          //   status: 'success',
+          //   duration: 5000,
+          //   isClosable: true,
+          // });
+          setSelectedFile(null);
+          // Refresh FileExplorer to reflect the deletion
+          setRefreshKey(prev => prev + 1);
+        } catch (deleteError) {
+          console.error('Delete error:', deleteError);
+          // toast({
+          //   title: 'Delete Failed',
+          //   description: deleteError instanceof Error ? deleteError.message : 'Failed to delete file',
+          //   status: 'error',
+          //   duration: 5000,
+          //   isClosable: true,
+          // });
+        }
+      }
 
     } catch (error) {
       setIsProcessing(false)
@@ -126,21 +158,39 @@ export default function ProcessingPage() {
                 </CardHeader>
                 <Divider />
                 <CardBody maxH="800px" overflowY="auto">
-                  <FileExplorer readOnly hideItemDelete onFileSelect={
-                    (f: FileNode) => { 
+                  <FileExplorer 
+                    key={refreshKey}
+                    readOnly 
+                    hideItemDelete 
+                    onFileSelect={
+                      (f: FileNode) => { 
                         if (f.type === 'file') {
                           setSelectedFile(f)
                           console.log('selectedFile', f)
                         }
                       }
-                    } />
+                    } 
+                  />
                 </CardBody>
               </Card>
             </GridItem>
             <GridItem>
               <Card>
                 <CardHeader>
-                  <Heading size="md">Action</Heading>
+                  <HStack justify="space-between" align="center">
+                    <Heading size="md">Action</Heading>
+                    <FormControl display="flex" alignItems="center" w="auto">
+                      <FormLabel htmlFor="delete-after-process" mb={0} fontSize="sm" mr={2}>
+                        Delete after processing
+                      </FormLabel>
+                      <Switch
+                        id="delete-after-process"
+                        isChecked={deleteAfterProcess}
+                        onChange={(e) => setDeleteAfterProcess(e.target.checked)}
+                        isDisabled={isProcessing}
+                      />
+                    </FormControl>
+                  </HStack>
                 </CardHeader>
                 <Divider />
                 <CardBody>
