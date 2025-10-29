@@ -19,6 +19,7 @@ import {
   StatGroup,
   Spinner,
   Center,
+  HStack,
 } from '@chakra-ui/react'
 import Layout from '@/components/layout/Layout'
 import { useAuth } from '@/hooks/useAuth'
@@ -27,6 +28,7 @@ import FileExplorer from '@/components/FileExplorer'
 import FilePreview from '@/components/FilePreview'
 import FileUpload from '@/components/FileUpload'
 import { apiClient } from '@/services/apiClient'
+import { MdOutlineFolder } from 'react-icons/md'
 
 export default function FilesPage() {
   const { user, isLoading } = useAuth()
@@ -139,6 +141,10 @@ export default function FilesPage() {
                         setSelectedFolder("")
                       }
                     }}
+                    onFolderSelect={(f) => {
+                      console.log('selectedFolder => ', f)
+                      setSelectedFolder(f.path || "")
+                    }}
                   />
                 </CardBody>
               </Card>
@@ -148,7 +154,14 @@ export default function FilesPage() {
             <GridItem h={{ base: '60vh', lg: '70vh' }} overflowY="auto">
               <Card>
                 <CardHeader>
-                  <Heading size="md">Upload Files</Heading>
+                  <HStack spacing={4} align="center">
+                    <Heading size="md">Upload Files</Heading>
+                    {selectedFolder && (
+                      <Box px={3} py={1} bg="gray.100" borderRadius="md" fontSize="sm" color="gray.700">
+                        Uploading to: <strong>{selectedFolder}</strong>
+                      </Box>
+                    )}
+                  </HStack>
                 </CardHeader>
                 <Divider />
                 <CardBody>

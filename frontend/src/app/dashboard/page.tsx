@@ -230,9 +230,15 @@ export default function Dashboard() {
                         <HStack spacing={4} align="center">
                           <Avatar size="lg" name={u.username} src={getImageUrl(u.avatar_url)} />
                           <VStack align="start" spacing={0}>
-                            <Text fontWeight="bold">{u.username}</Text>
-                            <Text fontSize="sm" color="gray.500">{u.email}</Text>
-                            <Badge mt={1}>{typeof u.role === 'string' ? u.role : (u.role?.value || '')}</Badge>
+                            <Text fontWeight="bold" isTruncated={false} wordBreak="break-all" noOfLines={1} w="100%">
+                              {u.username}
+                            </Text>
+                            <Text fontSize="sm" color="gray.500" isTruncated={false} wordBreak="break-all" w="100%">
+                              {u.email}
+                            </Text>
+                            <Badge mt={1} maxW="100%" whiteSpace="normal" textOverflow="ellipsis" overflowWrap="break-word">
+                              {typeof u.role === 'string' ? u.role : (u.role?.value || '')}
+                            </Badge>
                           </VStack>
                         </HStack>
                       </CardBody>
