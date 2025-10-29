@@ -42,6 +42,7 @@ interface FileNode {
 
 interface FileExplorerProps {
   onFileSelect?: (file: FileNode) => void
+  onFolderSelect?: (folder: FileNode) => void
   onRefresh?: () => void
   readOnly?: boolean
   hideItemDelete?: boolean
@@ -52,6 +53,7 @@ function FileTreeItem({
   level = 0,
   onDelete,
   onSelect,
+  onFolderSelect,
   onCreateFolder,
   readOnly,
   hideItemDelete,
@@ -63,6 +65,7 @@ function FileTreeItem({
   level?: number
   onDelete: (id: string) => void
   onSelect?: (file: FileNode) => void
+  onFolderSelect?: (folder: FileNode) => void
   onCreateFolder: (parentPath: string) => void
   readOnly?: boolean
   hideItemDelete?: boolean
@@ -94,6 +97,9 @@ function FileTreeItem({
   const handleClick = () => {
     if (isFolder) {
       onToggle()
+      if (onFolderSelect) {
+        onFolderSelect(node)
+      }
     } else if (onSelect) {
       onSelect(node)
     }
@@ -232,6 +238,7 @@ function FileTreeItem({
                 level={level + 1}
                 onDelete={onDelete}
                 onSelect={onSelect}
+                onFolderSelect={onFolderSelect}
                 onCreateFolder={onCreateFolder}
                 readOnly={readOnly}
                 hideItemDelete={hideItemDelete}
@@ -247,7 +254,7 @@ function FileTreeItem({
   )
 }
 
-export default function FileExplorer({ onFileSelect, onRefresh, readOnly = false, hideItemDelete = false }: FileExplorerProps) {
+export default function FileExplorer({ onFileSelect, onFolderSelect, onRefresh, readOnly = false, hideItemDelete = false }: FileExplorerProps) {
   const [fileTree, setFileTree] = useState<FileNode[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
@@ -465,6 +472,7 @@ export default function FileExplorer({ onFileSelect, onRefresh, readOnly = false
             console.log('selectedPath', selectedPath)
             if (onFileSelect) onFileSelect(file)
           }}
+          onFolderSelect={onFolderSelect}
           onCreateFolder={handleCreateFolder}
           readOnly={readOnly}
           hideItemDelete={hideItemDelete}
