@@ -138,19 +138,30 @@ export default function FilesPage() {
                     onRefresh={handleUploadComplete}
                     onDelete={handleDelete}
                     onFileSelect={(f) => {
-                      console.log('selectedFile => ', f)
+                      console.log('onFileSelect FILE:', f)
                       setSelectedFile(f)
                       if (f.name) {
                         const temp_path = f.name.split('/').slice(0, -1).join('/')
-                        console.log('temp_path => ', temp_path)
+                        console.log('onFileSelect PATH:', temp_path)
                         setSelectedFolder(temp_path || "")
                       } else {
                         setSelectedFolder("")
                       }
                     }}
                     onFolderSelect={(f) => {
-                      console.log('selectedFolder => ', f)
-                      setSelectedFolder(f.path || "")
+                      console.log('onFolderSelect FOLDER:', f)
+                      if (f.path) {
+                        const temp_path = f.path.split('/').filter((item: string) => item !== '').join('/')
+                        console.log('onFolderSelect PATH:', temp_path)
+                        setSelectedFolder(temp_path || "")
+                      } else {
+                        setSelectedFolder("")
+                      }
+                    }}
+                    onEmptyClick={() => {
+                      console.log('onEmptyClick - clearing selections')
+                      setSelectedFile(null)
+                      setSelectedFolder("")
                     }}
                   />
                 </CardBody>

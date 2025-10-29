@@ -45,6 +45,7 @@ interface FileExplorerProps {
   onFolderSelect?: (folder: FileNode) => void
   onRefresh?: () => void
   onDelete?: () => void
+  onEmptyClick?: () => void
   readOnly?: boolean
   hideItemDelete?: boolean
 }
@@ -118,7 +119,10 @@ function FileTreeItem({
   }, [collapseSignal])
 
   return (
-    <Box>
+    <Box 
+      data-file-item
+      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+    >
       <HStack
         spacing={1}
         py={1.5}
@@ -130,7 +134,10 @@ function FileTreeItem({
         borderColor={isSelected ? selectedBorder : undefined}
         borderRadius="md"
         transition="all 0.2s"
-        onClick={handleClick}
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation()
+          handleClick()
+        }}
       >
         {/* Chevron for folders */}
         {isFolder ? (
@@ -255,7 +262,7 @@ function FileTreeItem({
   )
 }
 
-export default function FileExplorer({ onFileSelect, onFolderSelect, onRefresh, onDelete, readOnly = false, hideItemDelete = false }: FileExplorerProps) {
+export default function FileExplorer({ onFileSelect, onFolderSelect, onRefresh, onDelete, onEmptyClick, readOnly = false, hideItemDelete = false }: FileExplorerProps) {
   const [fileTree, setFileTree] = useState<FileNode[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
@@ -423,10 +430,41 @@ export default function FileExplorer({ onFileSelect, onFolderSelect, onRefresh, 
     )
   }
 
+  const handleEmptyClick = (e: React.MouseEvent) => {
+    // Trigger onEmptyClick when clicking on empty space
+    // FileTreeItem and toolbar clicks have stopPropagation, so they won't bubble here
+    // If we reach here and it's not a known interactive element, treat as empty click
+    const target = e.target as HTMLElement
+    
+    // Skip if clicking on known interactive elements (buttons, links, file items)
+    const clickedOnFileItem = target.closest('[data-file-item]')
+    const clickedOnButton = target.closest('button') || target.closest('[role="button"]')
+    
+    if (clickedOnFileItem || clickedOnButton) {
+      return // Don't clear selection if clicking on file/folder or button
+    }
+    
+    // Otherwise, treat as empty click
+    console.log('Empty click detected - clearing selection')
+    setSelectedPath(null)
+    if (onEmptyClick) onEmptyClick()
+  }
+
   return (
-    <VStack align="stretch" spacing={2}>
+    <VStack 
+      align="stretch" 
+      spacing={2}
+      onClick={handleEmptyClick}
+      minH="100px"
+      w="100%"
+    >
       {!readOnly && (
-        <HStack justify="space-between" px={2} py={2}>
+        <HStack 
+          justify="space-between" 
+          px={2} 
+          py={2}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        >
           <IconButton
             aria-label="New folder"
             icon={<Icon as={FaFolder} />}

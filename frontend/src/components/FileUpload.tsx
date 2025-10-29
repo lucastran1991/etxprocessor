@@ -91,8 +91,15 @@ export default function FileUpload({ onUploadComplete, currentFolder = '' }: Fil
         formData.append('files', file)
         relativePaths.push(rp)
       })
-      console.log('[handleUpload] currentFolder => ', currentFolder)
-      formData.append('folder_path', currentFolder)
+      
+      // Normalize currentFolder: ensure it starts with / and defaults to / if empty
+      const normalizedFolder = currentFolder && currentFolder.trim() 
+        ? '/' + currentFolder.trim().replace(/^\/+|\/+$/g, '') 
+        : '/'
+      
+      console.log('[handleUpload] currentFolder (original) => ', currentFolder)
+      console.log('[handleUpload] normalizedFolder => ', normalizedFolder)
+      formData.append('folder_path', normalizedFolder)
       try {
         formData.append('relative_paths', JSON.stringify(relativePaths))
       } catch {}
@@ -160,8 +167,28 @@ export default function FileUpload({ onUploadComplete, currentFolder = '' }: Fil
     return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`
   }
 
+  // Normalize currentFolder for display
+  const displayFolder = currentFolder && currentFolder.trim() 
+    ? '/' + currentFolder.trim().replace(/^\/+|\/+$/g, '') 
+    : '/'
+
   return (
     <VStack spacing={4} align="stretch">
+      {/* {currentFolder && currentFolder.trim() && (
+        <Box 
+          px={3} 
+          py={2} 
+          bg="blue.50" 
+          borderRadius="md" 
+          fontSize="xs" 
+          color="blue.700"
+          borderWidth="1px"
+          borderColor="blue.200"
+        >
+          <Text fontWeight="semibold">Upload destination:</Text>
+          <Text fontFamily="mono">{displayFolder}</Text>
+        </Box>
+      )} */}
       <HStack spacing={2}>
         <input
           ref={fileInputRef}
