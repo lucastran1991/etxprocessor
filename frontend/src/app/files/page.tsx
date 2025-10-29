@@ -156,7 +156,7 @@ export default function FilesPage() {
                 </CardBody>
               </Card>
 
-              <Box mt={6} minH="70vh">
+              <Box mt={6}>
                 <FilePreview file={selectedFile} />
               </Box>
 
