@@ -71,13 +71,19 @@ export default function FilesPage() {
 
   const handleUploadComplete = () => {
     setRefreshKey((prev) => prev + 1)
-    // if files changed, clear preview if deleted; keep selection otherwise
+  }
+
+  const handleDelete = () => {
+    // Reset selections after any file/folder deletion
+    setSelectedFile(null)
+    setSelectedFolder("")
+    setRefreshKey((prev) => prev + 1)
   }
 
   // Determine current upload target folder based on selection
-  const currentUploadFolder = selectedFile
-    ? (selectedFile.type === 'folder' ? (selectedFile.path || '/') : (selectedFile.folder_path || '/'))
-    : '/'
+  // const currentUploadFolder = selectedFile
+  //   ? (selectedFile.type === 'folder' ? (selectedFile.path || '/') : (selectedFile.folder_path || '/'))
+  //   : '/'
 
   if (isLoading || !user) {
     return (
@@ -130,6 +136,7 @@ export default function FilesPage() {
                   <FileExplorer
                     key={refreshKey}
                     onRefresh={handleUploadComplete}
+                    onDelete={handleDelete}
                     onFileSelect={(f) => {
                       console.log('selectedFile => ', f)
                       setSelectedFile(f)

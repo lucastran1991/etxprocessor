@@ -44,6 +44,7 @@ interface FileExplorerProps {
   onFileSelect?: (file: FileNode) => void
   onFolderSelect?: (folder: FileNode) => void
   onRefresh?: () => void
+  onDelete?: () => void
   readOnly?: boolean
   hideItemDelete?: boolean
 }
@@ -254,7 +255,7 @@ function FileTreeItem({
   )
 }
 
-export default function FileExplorer({ onFileSelect, onFolderSelect, onRefresh, readOnly = false, hideItemDelete = false }: FileExplorerProps) {
+export default function FileExplorer({ onFileSelect, onFolderSelect, onRefresh, onDelete, readOnly = false, hideItemDelete = false }: FileExplorerProps) {
   const [fileTree, setFileTree] = useState<FileNode[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
@@ -364,6 +365,7 @@ export default function FileExplorer({ onFileSelect, onFolderSelect, onRefresh, 
 
       await loadFileTree()
       if (onRefresh) onRefresh()
+      if (onDelete) onDelete()
     } catch (error: any) {
       console.error('Failed to delete all files:', error)
       toast({
@@ -390,6 +392,7 @@ export default function FileExplorer({ onFileSelect, onFolderSelect, onRefresh, 
       })
       loadFileTree()
       if (onRefresh) onRefresh()
+      if (onDelete) onDelete()
     } catch (error: any) {
       console.error('Failed to delete file:', error)
       toast({
