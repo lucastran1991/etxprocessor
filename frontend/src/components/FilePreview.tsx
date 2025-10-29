@@ -71,6 +71,7 @@ export default function FilePreview({ file }: { file: FileNode | null }) {
   const [error, setError] = useState<string | null>(null)
 
   const previewBg = useColorModeValue('gray.50', 'gray.900')
+  const headerBg = useColorModeValue('gray.100', 'gray.700')
 
   const url = useMemo(() => {
     if (!file) return undefined
@@ -189,12 +190,12 @@ export default function FilePreview({ file }: { file: FileNode | null }) {
             )}
             {error && <Text color="red.500">{error}</Text>}
             {!loading && csvRows && csvRows.length > 0 && (
-              <Box overflowX="auto" maxW="100%">
-                <Table size="sm" variant="striped" sx={{ tableLayout: 'fixed' }}>
+              <Box overflow="auto" maxW="100%" maxH="60vh" borderRadius="md" borderWidth="1px">
+                <Table size="sm" variant="striped">
                   <Thead>
                     <Tr>
                       {csvRows[0].map((h, i) => (
-                        <Th key={i}>{h}</Th>
+                        <Th key={i} position="sticky" top={0} zIndex={1} bg={headerBg}>{h}</Th>
                       ))}
                     </Tr>
                   </Thead>
@@ -202,14 +203,16 @@ export default function FilePreview({ file }: { file: FileNode | null }) {
                     {csvRows.slice(1, 51).map((row, r) => (
                       <Tr key={r}>
                         {row.map((c, i) => (
-                          <Td key={i} maxW="200px" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">{c}</Td>
+                          <Td key={i} whiteSpace="nowrap">{c}</Td>
                         ))}
                       </Tr>
                     ))}
                   </Tbody>
                 </Table>
                 {csvRows.length > 50 && (
-                  <Text mt={2} fontSize="xs" color="gray.500">Showing first 50 rows…</Text>
+                  <Text mt={2} fontSize="xs" color="gray.500" px={2}>
+                    Showing first 50 rows…
+                  </Text>
                 )}
               </Box>
             )}
