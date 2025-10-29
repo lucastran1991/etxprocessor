@@ -1,0 +1,12 @@
+# Git Workflow Guidelines
+
+- **DO NOT commit and push unless explicitly asked by the user**
+  - Only run `git add`, `git commit`, and `git push` when the user explicitly requests it
+  - When showing changes or completing tasks, present the result without committing
+  - Let the user decide when to commit and push their work
+
+- **When user asks for commit/push:**
+  - Always stage the specific files that were modified
+  - Use descriptive commit messages that explain what changed
+  - Ask for confirmation before pushing if not already requested
+

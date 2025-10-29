@@ -86,16 +86,9 @@ export default function FileUpload({ onUploadComplete, currentFolder = '' }: Fil
     try {
       const formData = new FormData()
       const relativePaths: string[] = []
-      selectedFiles.forEach((file) => {
-        // if(currentFolder !== "" && !file.name.includes(currentFolder)) {
-        //   const new_name = currentFolder + '/' + file.name
-        //   const new_file = new File([file], new_name, { type: file.type })
-        //   formData.append('files', new_file)
-        // } else {
-        //   formData.append('files', file)
-        // }
+      selectedFiles.forEach((file: File) => {
+        const rp = file.webkitRelativePath || ''
         formData.append('files', file)
-        const rp = (file as any).webkitRelativePath || ''
         relativePaths.push(rp)
       })
       console.log('[handleUpload] currentFolder => ', currentFolder)
@@ -103,6 +96,23 @@ export default function FileUpload({ onUploadComplete, currentFolder = '' }: Fil
       try {
         formData.append('relative_paths', JSON.stringify(relativePaths))
       } catch {}
+
+      // Get all key:value pairs from formData and console.log values as JSON if possible
+      const obj: any = {};
+      formData.forEach((value, key) => {
+        // For files, don't try JSON.parse; keep as is (File object or string)
+        if (key === 'files') {
+          if (!obj[key]) obj[key] = [];
+          obj[key].push(value);
+        } else {
+          try {
+            obj[key] = JSON.parse(value as string);
+          } catch {
+            obj[key] = value;
+          }
+        }
+      });
+      console.log('[FileUpload] formData:', obj);
 
       await apiClient.post('/files/upload', formData, {
         headers: {

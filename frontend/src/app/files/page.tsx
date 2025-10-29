@@ -163,11 +163,18 @@ export default function FilesPage() {
                 <CardHeader>
                   <HStack spacing={4} align="center">
                     <Heading size="md">Upload Files</Heading>
-                    {selectedFolder && (
-                      <Box px={3} py={1} bg="gray.100" borderRadius="md" fontSize="sm" color="gray.700">
-                        Uploading to: <strong>{selectedFolder}</strong>
-                      </Box>
-                    )}
+                    <Box 
+                      px={3} 
+                      py={1} 
+                      bg={selectedFolder ? "blue.50" : "orange.50"} 
+                      borderRadius="md" 
+                      fontSize="sm" 
+                      color={selectedFolder ? "blue.700" : "orange.700"}
+                      borderWidth="1px"
+                      borderColor={selectedFolder ? "blue.200" : "orange.200"}
+                    >
+                      Uploading to: <strong>{selectedFolder || "ROOT"}</strong>
+                    </Box>
                   </HStack>
                 </CardHeader>
                 <Divider />
