@@ -145,7 +145,7 @@ export default function FilesPage() {
             </GridItem>
 
             {/* Right side - Upload Area */}
-            <GridItem h={{ base: '60vh', lg: '70vh' }} overflow="hidden">
+            <GridItem h={{ base: '60vh', lg: '70vh' }} overflowY="auto">
               <Card>
                 <CardHeader>
                   <Heading size="md">Upload Files</Heading>
