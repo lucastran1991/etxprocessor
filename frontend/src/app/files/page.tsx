@@ -118,13 +118,13 @@ export default function FilesPage() {
 
           <Grid templateColumns={{ base: '1fr', lg: '300px 1fr' }} gap={6}>
             {/* Left sidebar - File Explorer */}
-            <GridItem>
-              <Card>
+            <GridItem h={{ base: '60vh', lg: '70vh' }}>
+              <Card h="100%">
                 <CardHeader>
                   <Heading size="md">File Explorer</Heading>
                 </CardHeader>
                 <Divider />
-                <CardBody maxH="800px" overflowY="auto">
+                <CardBody overflowY="auto" flex="1">
                   <FileExplorer
                     key={refreshKey}
                     onRefresh={handleUploadComplete}
@@ -145,7 +145,7 @@ export default function FilesPage() {
             </GridItem>
 
             {/* Right side - Upload Area */}
-            <GridItem>
+            <GridItem h={{ base: '60vh', lg: '70vh' }} overflow="hidden">
               <Card>
                 <CardHeader>
                   <Heading size="md">Upload Files</Heading>
