@@ -1,0 +1,38 @@
+---
+description: Enforce language policy — Vietnamese in chat, English in generated files
+globs: **/*
+alwaysApply: true
+---
+
+- **Chat responses (assistant messages in chatbox)**
+  - All assistant replies must be in Vietnamese.
+  - Only keep non‑Vietnamese content when quoting code, URLs, product names, or API identifiers.
+  - Tránh pha trộn song ngữ trong cùng một câu; ưu tiên tiếng Việt rõ ràng, súc tích.
+
+- **Generated artifacts (code, comments, docs, commits)**
+  - Source code, identifiers, comments, README, commit messages, and auto‑generated files must be in English.
+  - UI copy inside code (e.g., strings shown to end users) defaults to English unless the product requirement specifies otherwise.
+  - Prefer clear, professional technical English for maintainability.
+
+- **Rationale**
+  - Chat in Vietnamese to match stakeholder preference.
+  - Code and docs in English to maintain standard developer conventions and interoperability.
+
+- **DO examples**
+  - Chat (Vietnamese):
+    - "Đã cập nhật endpoint xóa avatar để trả về avatar mặc định ngẫu nhiên."
+  - Code (English):
+    ```typescript
+    // Select a random default avatar seeded in uploads/avatars
+    export function pickRandomDefaultAvatar(): string | null { /* ... */ }
+    ```
+  - Commit message (English):
+    - "feat(avatar): set random default on delete; skip seeded file removal"
+
+- **DON'T examples**
+  - Chat: Mixing English extensively within Vietnamese explanations.
+  - Code: Writing comments or identifiers in Vietnamese.
+
+- **Related rules**
+  - See [cursor_rules.mdc](mdc:.cursor/rules/cursor_rules.mdc) for formatting and structure guidance.
+
