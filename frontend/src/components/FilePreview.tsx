@@ -155,7 +155,7 @@ export default function FilePreview({ file }: { file: FileNode | null }) {
   }
 
   return (
-    <Card maxW="100%" maxH="calc(100vh - 100px)" overflowY="auto">
+    <Card maxW="100%" maxH="calc(100vh - 100px)" overflow="auto">
       <CardHeader>
         <VStack align="start" spacing={1}>
           <Heading size="md">Preview</Heading>
@@ -167,7 +167,7 @@ export default function FilePreview({ file }: { file: FileNode | null }) {
         </VStack>
       </CardHeader>
       <Divider />
-      <CardBody overflowX="auto">
+      <CardBody overflow="auto">
         {isImage(file.mime_type, file.name) && url && (
           <Box bg={previewBg} p={2} borderRadius="md">
             <Image src={url} alt={file.name} maxH="480px" objectFit="contain" mx="auto" />
