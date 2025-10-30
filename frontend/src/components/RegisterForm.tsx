@@ -14,9 +14,11 @@ import {
   Text,
   Select
 } from '@chakra-ui/react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
+import { slideIn, fadeIn } from '@/utils/animations'
 
 interface RegisterFormData {
   username: string
@@ -67,12 +69,22 @@ export default function RegisterForm() {
     <Box w="full" maxW="md">
       <form onSubmit={handleSubmit(onSubmit)}>
         <VStack spacing={4}>
-          {error && (
-            <Alert status="error">
-              <AlertIcon />
-              {error}
-            </Alert>
-          )}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                variants={slideIn}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                style={{ width: '100%' }}
+              >
+                <Alert status="error" borderRadius="md">
+                  <AlertIcon />
+                  {error}
+                </Alert>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <FormControl isInvalid={!!errors.username}>
             <FormLabel>Username</FormLabel>
@@ -82,12 +94,26 @@ export default function RegisterForm() {
                 required: 'Username is required',
                 minLength: { value: 3, message: 'Username must be at least 3 characters' }
               })}
+              _focus={{
+                borderColor: 'brand.500',
+                boxShadow: '0 0 0 3px rgba(79,134,255,0.2)',
+              }}
+              transition="all 0.3s ease"
             />
-            {errors.username && (
-              <Text color="red.500" fontSize="sm">
-                {errors.username.message}
-              </Text>
-            )}
+            <AnimatePresence>
+              {errors.username && (
+                <motion.div
+                  variants={fadeIn}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    {errors.username.message}
+                  </Text>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </FormControl>
 
           <FormControl isInvalid={!!errors.email}>
@@ -101,17 +127,39 @@ export default function RegisterForm() {
                   message: 'Invalid email address'
                 }
               })}
+              _focus={{
+                borderColor: 'brand.500',
+                boxShadow: '0 0 0 3px rgba(79,134,255,0.2)',
+              }}
+              transition="all 0.3s ease"
             />
-            {errors.email && (
-              <Text color="red.500" fontSize="sm">
-                {errors.email.message}
-              </Text>
-            )}
+            <AnimatePresence>
+              {errors.email && (
+                <motion.div
+                  variants={fadeIn}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    {errors.email.message}
+                  </Text>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </FormControl>
 
           <FormControl>
             <FormLabel>Role</FormLabel>
-            <Select defaultValue="user" {...register('role')}>
+            <Select 
+              defaultValue="user" 
+              {...register('role')}
+              _focus={{
+                borderColor: 'brand.500',
+                boxShadow: '0 0 0 3px rgba(79,134,255,0.2)',
+              }}
+              transition="all 0.3s ease"
+            >
               <option value="devops">Devops</option>
               <option value="backend">Backend</option>
               <option value="frontend">Frontend</option>
@@ -139,12 +187,26 @@ export default function RegisterForm() {
                 required: 'Password is required',
                 minLength: { value: 6, message: 'Password must be at least 6 characters' }
               })}
+              _focus={{
+                borderColor: 'brand.500',
+                boxShadow: '0 0 0 3px rgba(79,134,255,0.2)',
+              }}
+              transition="all 0.3s ease"
             />
-            {errors.password && (
-              <Text color="red.500" fontSize="sm">
-                {errors.password.message}
-              </Text>
-            )}
+            <AnimatePresence>
+              {errors.password && (
+                <motion.div
+                  variants={fadeIn}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    {errors.password.message}
+                  </Text>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </FormControl>
 
           <FormControl isInvalid={!!errors.confirmPassword}>
@@ -155,23 +217,46 @@ export default function RegisterForm() {
                 required: 'Please confirm your password',
                 validate: value => value === password || 'Passwords do not match'
               })}
+              _focus={{
+                borderColor: 'brand.500',
+                boxShadow: '0 0 0 3px rgba(79,134,255,0.2)',
+              }}
+              transition="all 0.3s ease"
             />
-            {errors.confirmPassword && (
-              <Text color="red.500" fontSize="sm">
-                {errors.confirmPassword.message}
-              </Text>
-            )}
+            <AnimatePresence>
+              {errors.confirmPassword && (
+                <motion.div
+                  variants={fadeIn}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    {errors.confirmPassword.message}
+                  </Text>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </FormControl>
 
           <FormControl isInvalid={!!errors.terms}>
             <Checkbox {...register('terms', { required: 'You must accept the terms' })}>
               I agree to the terms and conditions
             </Checkbox>
-            {errors.terms && (
-              <Text color="red.500" fontSize="sm">
-                {errors.terms.message}
-              </Text>
-            )}
+            <AnimatePresence>
+              {errors.terms && (
+                <motion.div
+                  variants={fadeIn}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    {errors.terms.message}
+                  </Text>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </FormControl>
 
           <Button

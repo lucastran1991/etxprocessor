@@ -12,9 +12,11 @@ import {
   Spinner,
   HStack,
 } from '@chakra-ui/react'
-import { DeleteIcon, EditIcon } from '@chakra-ui/icons'
+import { DeleteIcon, EditIcon, CheckIcon } from '@chakra-ui/icons'
+import { motion, AnimatePresence } from 'framer-motion'
 import { apiClient } from '@/services/apiClient'
 import { getImageUrl } from '@/utils/imageUrl'
+import { scaleIn, fadeIn } from '@/utils/animations'
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string
@@ -29,6 +31,7 @@ export default function AvatarUpload({
 }: AvatarUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(currentAvatarUrl)
+  const [showSuccess, setShowSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const toast = useToast()
 
@@ -89,6 +92,9 @@ export default function AvatarUpload({
       const newAvatarUrl = response.data.avatar_url
       setPreviewUrl(newAvatarUrl)
       onAvatarUpdate(newAvatarUrl)
+
+      setShowSuccess(true)
+      setTimeout(() => setShowSuccess(false), 2000)
 
       toast({
         title: 'Success',
@@ -151,23 +157,60 @@ export default function AvatarUpload({
   return (
     <VStack spacing={4}>
       <Box position="relative">
-        <Avatar size="2xl" name={username} src={getImageUrl(previewUrl)} />
-        {isUploading && (
-          <Box
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            bg="blackAlpha.600"
-            borderRadius="full"
-          >
-            <Spinner size="lg" color="white" />
-          </Box>
-        )}
+        <Box
+          as={motion.div}
+          variants={scaleIn}
+          initial="initial"
+          animate={previewUrl ? "animate" : "initial"}
+          key={previewUrl}
+        >
+          <Avatar size="2xl" name={username} src={getImageUrl(previewUrl)} boxShadow="xl" />
+        </Box>
+        <AnimatePresence>
+          {isUploading && (
+            <Box
+              as={motion.div}
+              variants={fadeIn}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              position="absolute"
+              top={0}
+              left={0}
+              right={0}
+              bottom={0}
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              bg="blackAlpha.700"
+              backdropFilter="blur(4px)"
+              borderRadius="full"
+            >
+              <Spinner size="lg" color="white" />
+            </Box>
+          )}
+          {showSuccess && (
+            <Box
+              as={motion.div}
+              variants={fadeIn}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              position="absolute"
+              top={0}
+              left={0}
+              right={0}
+              bottom={0}
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              bg="green.500"
+              borderRadius="full"
+            >
+              <CheckIcon boxSize={8} color="white" />
+            </Box>
+          )}
+        </AnimatePresence>
       </Box>
 
       <input

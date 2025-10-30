@@ -29,6 +29,7 @@ import FilePreview from '@/components/FilePreview'
 import FileUpload from '@/components/FileUpload'
 import { apiClient } from '@/services/apiClient'
 import { MdOutlineFolder } from 'react-icons/md'
+import SkeletonLoader from '@/components/SkeletonLoader'
 
 export default function FilesPage() {
   const { user, isLoading } = useAuth()
@@ -88,11 +89,18 @@ export default function FilesPage() {
   if (isLoading || !user) {
     return (
       <Layout>
-        <Container maxW="container.xl" py={10}>
-          <Center>
-            <Spinner size="xl" />
-            <Text ml={4}>Loading...</Text>
-          </Center>
+        <Container maxW="90%" pt="5%" pb="2%" pl="5%" pr="2%">
+          <VStack spacing={6} align="stretch">
+            <SkeletonLoader type="card" count={1} height="100px" />
+            <Grid templateColumns={{ base: '1fr', lg: '300px 1fr' }} gap={6}>
+              <GridItem>
+                <SkeletonLoader type="card" count={1} height="500px" />
+              </GridItem>
+              <GridItem>
+                <SkeletonLoader type="card" count={2} />
+              </GridItem>
+            </Grid>
+          </VStack>
         </Container>
       </Layout>
     )

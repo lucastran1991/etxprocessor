@@ -14,9 +14,11 @@ import {
   Link,
   Text
 } from '@chakra-ui/react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
+import { slideIn, fadeIn } from '@/utils/animations'
 
 interface LoginFormData {
   username: string
@@ -54,24 +56,48 @@ export default function LoginForm({ showRegisterLink = true }: LoginFormProps) {
     <Box w="full" maxW="md">
       <form onSubmit={handleSubmit(onSubmit)}>
         <VStack spacing={4}>
-          {error && (
-            <Alert status="error">
-              <AlertIcon />
-              {error}
-            </Alert>
-          )}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                variants={slideIn}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                style={{ width: '100%' }}
+              >
+                <Alert status="error" borderRadius="md">
+                  <AlertIcon />
+                  {error}
+                </Alert>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <FormControl isInvalid={!!errors.username}>
             <FormLabel>Username or Email</FormLabel>
             <Input
               type="text"
               {...register('username', { required: 'Username is required' })}
+              _focus={{
+                borderColor: 'brand.500',
+                boxShadow: '0 0 0 3px rgba(79,134,255,0.2)',
+              }}
+              transition="all 0.3s ease"
             />
-            {errors.username && (
-              <Text color="red.500" fontSize="sm">
-                {errors.username.message}
-              </Text>
-            )}
+            <AnimatePresence>
+              {errors.username && (
+                <motion.div
+                  variants={fadeIn}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    {errors.username.message}
+                  </Text>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </FormControl>
 
           <FormControl isInvalid={!!errors.password}>
@@ -79,12 +105,26 @@ export default function LoginForm({ showRegisterLink = true }: LoginFormProps) {
             <Input
               type="password"
               {...register('password', { required: 'Password is required' })}
+              _focus={{
+                borderColor: 'brand.500',
+                boxShadow: '0 0 0 3px rgba(79,134,255,0.2)',
+              }}
+              transition="all 0.3s ease"
             />
-            {errors.password && (
-              <Text color="red.500" fontSize="sm">
-                {errors.password.message}
-              </Text>
-            )}
+            <AnimatePresence>
+              {errors.password && (
+                <motion.div
+                  variants={fadeIn}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    {errors.password.message}
+                  </Text>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </FormControl>
 
           <FormControl>

@@ -1,12 +1,14 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
-import { Container, Heading, VStack, Card, CardHeader, CardBody, Divider, SimpleGrid, FormControl, FormLabel, Input, Button, useToast, HStack } from '@chakra-ui/react'
+import { Container, Heading, VStack, Card, CardHeader, CardBody, Divider, SimpleGrid, FormControl, FormLabel, Input, Button, useToast, HStack, Box } from '@chakra-ui/react'
+import { motion } from 'framer-motion'
 import { FiUpload } from 'react-icons/fi'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/services/apiClient'
 import Layout from '@/components/layout/Layout'
+import { staggerContainer, staggerItem } from '@/utils/animations'
 
 interface ConfigShape {
   HTTPURI?: string
@@ -103,23 +105,40 @@ export default function ConfigPage() {
                   </Button>
                 </FormControl>
               </HStack>
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                {[
-                  ['HTTPURI','HTTP URI'],['WSURI','WS URI'],['email','Email'],['password','Password'],
-                  ['ServerFileFolder','Server File Folder'],['RowsPerFile','Rows Per File'],
-                  ['ImportFilePerRequest','Import File Per Request'],['MaxRequests','Max Requests'],
-                  ['API_KEY','API KEY'],['API_VERSION','API VERSION'],['GATE_WAY','Gateway']
-                ].map(([key,label]) => (
-                  <FormControl key={key as string}>
-                    <FormLabel>{label}</FormLabel>
-                    <Input
-                      type='text'
-                      value={(config as any)?.[key as keyof ConfigShape] ?? ''}
-                      onChange={(e) => set(key as keyof ConfigShape, (key==='RowsPerFile' || key==='ImportFilePerRequest' || key==='MaxRequests') ? Number(e.target.value) : e.target.value)}
-                    />
-                  </FormControl>
-                ))}
-              </SimpleGrid>
+              <Box
+                as={motion.div}
+                variants={staggerContainer}
+                initial="initial"
+                animate="animate"
+              >
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                  {[
+                    ['HTTPURI','HTTP URI'],['WSURI','WS URI'],['email','Email'],['password','Password'],
+                    ['ServerFileFolder','Server File Folder'],['RowsPerFile','Rows Per File'],
+                    ['ImportFilePerRequest','Import File Per Request'],['MaxRequests','Max Requests'],
+                    ['API_KEY','API KEY'],['API_VERSION','API VERSION'],['GATE_WAY','Gateway']
+                  ].map(([key,label]) => (
+                    <motion.div
+                      key={key as string}
+                      variants={staggerItem}
+                    >
+                      <FormControl>
+                        <FormLabel>{label}</FormLabel>
+                        <Input
+                          type='text'
+                          value={(config as any)?.[key as keyof ConfigShape] ?? ''}
+                          onChange={(e) => set(key as keyof ConfigShape, (key==='RowsPerFile' || key==='ImportFilePerRequest' || key==='MaxRequests') ? Number(e.target.value) : e.target.value)}
+                          _focus={{
+                            borderColor: 'brand.500',
+                            boxShadow: '0 0 0 3px rgba(79,134,255,0.2)',
+                          }}
+                          transition="all 0.3s ease"
+                        />
+                      </FormControl>
+                    </motion.div>
+                  ))}
+                </SimpleGrid>
+              </Box>
               <Button mt={6} colorScheme="brand" onClick={onSave} isLoading={saving} w="full">Save</Button>
             </CardBody>
           </Card>

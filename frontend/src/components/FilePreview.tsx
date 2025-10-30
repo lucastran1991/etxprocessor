@@ -20,9 +20,15 @@ import {
   Td,
   Spinner,
   Image,
-  useColorModeValue
+  useColorModeValue,
+  Icon,
+  Center
 } from '@chakra-ui/react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { getImageUrl } from '@/utils/imageUrl'
+import { fadeIn, slideIn, scaleIn } from '@/utils/animations'
+import { FaFile, FaFileImage, FaFilePdf, FaFileCsv, FaFileAlt } from 'react-icons/fa'
+import SkeletonLoader from './SkeletonLoader'
 
 interface FileNode {
   id: string
@@ -148,18 +154,61 @@ export default function FilePreview({ file }: { file: FileNode | null }) {
         </CardHeader>
         <Divider />
         <CardBody>
-          <Text color="gray.500">Select a file from the File Explorer to preview.</Text>
+          <VStack
+            as={motion.div}
+            variants={fadeIn}
+            initial="initial"
+            animate="animate"
+            spacing={4}
+            py={8}
+            textAlign="center"
+          >
+            <Icon
+              as={FaFile}
+              boxSize={12}
+              color="gray.400"
+              opacity={0.6}
+            />
+            <VStack spacing={1}>
+              <Text color="gray.600" fontSize="md" fontWeight="medium">
+                No file selected
+              </Text>
+              <Text color="gray.400" fontSize="sm">
+                Select a file from the File Explorer to preview
+              </Text>
+            </VStack>
+          </VStack>
         </CardBody>
       </Card>
     )
   }
 
   return (
-    <Card maxW="100%" maxH="calc(100vh - 100px)" overflow="auto">
+    <motion.div
+      variants={scaleIn}
+      initial="initial"
+      animate="animate"
+      key={file.id}
+    >
+    <Card 
+      maxW="100%" 
+      maxH="calc(100vh - 100px)" 
+      overflow="auto"
+    >
       <CardHeader>
         <VStack align="start" spacing={1}>
           <Heading size="md">Preview</Heading>
-          <HStack spacing={2}>
+          <HStack spacing={2} flexWrap="wrap">
+            <Icon
+              as={
+                isImage(file.mime_type, file.name) ? FaFileImage :
+                isPdf(file.mime_type, file.name) ? FaFilePdf :
+                isCsv(file.mime_type, file.name) ? FaFileCsv :
+                FaFileAlt
+              }
+              boxSize={4}
+              color="brand.500"
+            />
             <Text fontWeight="semibold">{file.name}</Text>
             {file.mime_type && <Badge>{file.mime_type}</Badge>}
             {file.size ? <Badge colorScheme="brand">{formatBytes(file.size)}</Badge> : null}
@@ -168,81 +217,175 @@ export default function FilePreview({ file }: { file: FileNode | null }) {
       </CardHeader>
       <Divider />
       <CardBody overflow="auto">
-        {isImage(file.mime_type, file.name) && url && (
-          <Box bg={previewBg} p={2} borderRadius="md">
-            <Image src={url} alt={file.name} maxH="480px" objectFit="contain" mx="auto" />
-          </Box>
-        )}
-
-        {isPdf(file.mime_type, file.name) && url && (
-          <Box bg={previewBg} p={2} borderRadius="md">
-            <Box as="iframe" src={url} width="100%" height="600px" border={0} />
-          </Box>
-        )}
-
-        {isCsv(file.mime_type, file.name) && (
-          <Box>
-            {loading && (
-              <HStack>
-                <Spinner size="sm" />
-                <Text>Loading CSV preview…</Text>
-              </HStack>
-            )}
-            {error && <Text color="red.500">{error}</Text>}
-            {!loading && csvRows && csvRows.length > 0 && (
-              <Box overflow="auto" maxW="100%" maxH="60vh" borderRadius="md" borderWidth="1px">
-                <Table size="sm" variant="striped">
-                  <Thead>
-                    <Tr>
-                      {csvRows[0].map((h, i) => (
-                        <Th key={i} position="sticky" top={0} zIndex={1} bg={headerBg}>{h}</Th>
-                      ))}
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {csvRows.slice(1, 51).map((row, r) => (
-                      <Tr key={r}>
-                        {row.map((c, i) => (
-                          <Td key={i} whiteSpace="nowrap">{c}</Td>
-                        ))}
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-                {csvRows.length > 50 && (
-                  <Text mt={2} fontSize="xs" color="gray.500" px={2}>
-                    Showing first 50 rows…
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="loading"
+              variants={fadeIn}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <Center py={8}>
+                <VStack spacing={3}>
+                  <Spinner size="md" color="brand.500" thickness="3px" />
+                  <Text fontSize="sm" color="gray.500">
+                    Loading preview...
                   </Text>
-                )}
-              </Box>
+                </VStack>
+              </Center>
+            </motion.div>
+          ) : error ? (
+            <motion.div
+              key="error"
+              variants={slideIn}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <VStack
+                spacing={3}
+                py={6}
+                textAlign="center"
+              >
+                <Icon as={FaFileAlt} boxSize={10} color="red.400" opacity={0.6} />
+                <Text color="red.500" fontWeight="medium">{error}</Text>
+              </VStack>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+        {isImage(file.mime_type, file.name) && url && !loading && (
+          <Box
+            as={motion.div}
+            variants={fadeIn}
+            initial="initial"
+            animate="animate"
+            bg={previewBg} 
+            p={2} 
+            borderRadius="md"
+          >
+            <Image 
+              src={url} 
+              alt={file.name} 
+              maxH="480px" 
+              objectFit="contain" 
+              mx="auto"
+              borderRadius="md"
+              boxShadow="md"
+              transition="all 0.3s ease"
+              _hover={{
+                boxShadow: 'lg',
+                transform: 'scale(1.02)',
+              }}
+            />
+          </Box>
+        )}
+
+        {isPdf(file.mime_type, file.name) && url && !loading && (
+          <Box
+            as={motion.div}
+            variants={fadeIn}
+            initial="initial"
+            animate="animate"
+            bg={previewBg} 
+            p={2} 
+            borderRadius="md"
+          >
+            <Box as="iframe" src={url} width="100%" height="600px" border={0} borderRadius="md" />
+          </Box>
+        )}
+
+        {isCsv(file.mime_type, file.name) && !loading && !error && csvRows && csvRows.length > 0 && (
+          <Box
+            as={motion.div}
+            variants={slideIn}
+            initial="initial"
+            animate="animate"
+            overflow="auto" 
+            maxW="100%" 
+            maxH="60vh" 
+            borderRadius="md" 
+            borderWidth="1px"
+          >
+            <Table size="sm" variant="striped">
+              <Thead>
+                <Tr>
+                  {csvRows[0].map((h, i) => (
+                    <Th key={i} position="sticky" top={0} zIndex={1} bg={headerBg}>{h}</Th>
+                  ))}
+                </Tr>
+              </Thead>
+              <Tbody>
+                {csvRows.slice(1, 51).map((row, r) => (
+                  <Tr 
+                    key={r}
+                    transition="all 0.2s ease"
+                    _hover={{
+                      bg: 'brand.50',
+                      transform: 'translateX(2px)',
+                    }}
+                  >
+                    {row.map((c, i) => (
+                      <Td key={i} whiteSpace="nowrap">{c}</Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+            {csvRows.length > 50 && (
+              <Text mt={2} fontSize="xs" color="gray.500" px={2}>
+                Showing first 50 rows…
+              </Text>
             )}
           </Box>
         )}
 
-        {isJson(file.mime_type, file.name) && (
-          <Box>
-            {loading && (
-              <HStack>
-                <Spinner size="sm" />
-                <Text>Loading JSON preview…</Text>
-              </HStack>
-            )}
-            {error && <Text color="red.500">{error}</Text>}
-            {!loading && jsonText && (
-              <Box bg={previewBg} p={3} borderRadius="md" overflowX="auto">
-                <Box as="pre" fontSize="sm" whiteSpace="pre" fontFamily="mono" maxW="100%">
-                  {jsonText}
-                </Box>
-              </Box>
-            )}
+        {isJson(file.mime_type, file.name) && !loading && !error && jsonText && (
+          <Box
+            as={motion.div}
+            variants={slideIn}
+            initial="initial"
+            animate="animate"
+            bg={previewBg} 
+            p={3} 
+            borderRadius="md" 
+            overflowX="auto"
+          >
+            <Box as="pre" fontSize="sm" whiteSpace="pre" fontFamily="mono" maxW="100%">
+              {jsonText}
+            </Box>
           </Box>
         )}
 
-        {!isImage(file.mime_type, file.name) && !isPdf(file.mime_type, file.name) && !isCsv(file.mime_type, file.name) && !isJson(file.mime_type, file.name) && (
-          <Text color="gray.500">No preview available for this file type.</Text>
+        {!isImage(file.mime_type, file.name) && !isPdf(file.mime_type, file.name) && !isCsv(file.mime_type, file.name) && !isJson(file.mime_type, file.name) && !loading && !error && (
+          <VStack
+            as={motion.div}
+            variants={fadeIn}
+            initial="initial"
+            animate="animate"
+            spacing={3}
+            py={8}
+            textAlign="center"
+          >
+            <Icon
+              as={FaFileAlt}
+              boxSize={10}
+              color="gray.400"
+              opacity={0.6}
+            />
+            <VStack spacing={1}>
+              <Text color="gray.600" fontSize="md" fontWeight="medium">
+                No preview available
+              </Text>
+              <Text color="gray.400" fontSize="sm">
+                Preview is not supported for this file type
+              </Text>
+            </VStack>
+          </VStack>
         )}
       </CardBody>
     </Card>
+    </motion.div>
   )
 }
 

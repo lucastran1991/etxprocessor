@@ -63,8 +63,8 @@ const Sidebar = () => {
   const { colorMode, toggleColorMode } = useColorMode();  // Make sure toggleColorMode is available
   const { user, logout } = useAuth();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const bg = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const bg = useColorModeValue('rgba(255, 255, 255, 0.8)', 'rgba(26, 32, 44, 0.8)');
+  const borderColor = useColorModeValue('rgba(226, 232, 240, 0.5)', 'rgba(72, 80, 90, 0.5)');
 
   return (
     <Box
@@ -75,10 +75,11 @@ const Sidebar = () => {
       h="full"
       w={isOpen ? '250px' : '60px'}
       bg={bg}
-      borderRight="1px"
+      backdropFilter="blur(10px)"
+      borderRight="1px solid"
       borderColor={borderColor}
       zIndex="sticky"
-      boxShadow="base"
+      boxShadow="2xl"
       overflowY="auto"
       onMouseEnter={onOpen}
       onMouseLeave={onClose}

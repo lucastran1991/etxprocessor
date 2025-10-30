@@ -21,11 +21,14 @@ import {
   Center,
   Spinner
 } from '@chakra-ui/react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/layout/Layout'
 import AvatarUpload from '@/components/AvatarUpload'
-import { useEffect, useState } from 'react'
+import SkeletonLoader from '@/components/SkeletonLoader'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { fadeIn, staggerContainer, staggerItem } from '@/utils/animations'
 
 export default function Profile() {
   const { user, isLoading } = useAuth()
@@ -40,6 +43,14 @@ export default function Profile() {
 
   const cardBg = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('gray.200', 'gray.700')
+  const [animatedProgress, setAnimatedProgress] = useState(0)
+
+  const getExpProgress = useCallback((exp: number, level: number) => {
+    const currentLevelExp = (level - 1) * 100
+    const nextLevelExp = level * 100
+    const progress = ((exp - currentLevelExp) / (nextLevelExp - currentLevelExp)) * 100
+    return Math.max(0, Math.min(100, progress))
+  }, [])
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -51,8 +62,15 @@ export default function Profile() {
         email: user.email
       })
       setAvatarUrl(user.avatar_url)
+      
+      // Animate progress bar
+      const progress = getExpProgress(user.exp, user.level)
+      setAnimatedProgress(0)
+      setTimeout(() => {
+        setAnimatedProgress(progress)
+      }, 300)
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading, router, getExpProgress])
 
   const handleAvatarUpdate = (newUrl: string | null) => {
     setAvatarUrl(newUrl || undefined)
@@ -96,21 +114,14 @@ export default function Profile() {
     }
   }
 
-  const getExpProgress = (exp: number, level: number) => {
-    const currentLevelExp = (level - 1) * 100
-    const nextLevelExp = level * 100
-    const progress = ((exp - currentLevelExp) / (nextLevelExp - currentLevelExp)) * 100
-    return Math.max(0, Math.min(100, progress))
-  }
-
   if (isLoading) {
     return (
       <Layout>
-        <Container maxW="4xl" py={10}>
-          <Center>
-            <Spinner size="xl" />
-            <Text ml={4}>Loading...</Text>
-          </Center>
+        <Container maxW="90%" pt="5%" pb="2%" pl="5%" pr="2%">
+          <VStack spacing={8} align="stretch">
+            <SkeletonLoader type="card" count={1} height="100px" />
+            <SkeletonLoader type="card" count={1} height="600px" />
+          </VStack>
         </Container>
       </Layout>
     )
@@ -150,55 +161,109 @@ export default function Profile() {
 
                 <Divider />
 
-                <VStack spacing={4} width="100%" maxW="md">
-                  <FormControl>
-                    <FormLabel>Username</FormLabel>
-                    <Input
-                      name="username"
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      isDisabled={!isEditing}
-                    />
-                  </FormControl>
+                <Box
+                  as={motion.div}
+                  variants={staggerContainer}
+                  initial="initial"
+                  animate="animate"
+                  width="100%"
+                  maxW="md"
+                >
+                  <VStack spacing={4} width="100%">
+                    <motion.div variants={staggerItem} style={{ width: '100%' }}>
+                      <FormControl>
+                        <FormLabel>Username</FormLabel>
+                        <Input
+                          name="username"
+                          value={formData.username}
+                          onChange={handleInputChange}
+                          isDisabled={!isEditing}
+                          _focus={{
+                            borderColor: 'brand.500',
+                            boxShadow: '0 0 0 3px rgba(79,134,255,0.2)',
+                          }}
+                          transition="all 0.3s ease"
+                        />
+                      </FormControl>
+                    </motion.div>
 
-                  <FormControl>
-                    <FormLabel>Email</FormLabel>
-                    <Input
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      isDisabled={!isEditing}
-                    />
-                  </FormControl>
+                    <motion.div variants={staggerItem} style={{ width: '100%' }}>
+                      <FormControl>
+                        <FormLabel>Email</FormLabel>
+                        <Input
+                          name="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          isDisabled={!isEditing}
+                          _focus={{
+                            borderColor: 'brand.500',
+                            boxShadow: '0 0 0 3px rgba(79,134,255,0.2)',
+                          }}
+                          transition="all 0.3s ease"
+                        />
+                      </FormControl>
+                    </motion.div>
+                  </VStack>
+                </Box>
 
-                  <HStack spacing={4} width="100%">
-                    {isEditing ? (
-                      <>
-                        <Button colorScheme="brand" onClick={handleSave} flex="1">
-                          Save Changes
-                        </Button>
-                        <Button variant="outline" onClick={() => setIsEditing(false)} flex="1">
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <Button colorScheme="brand" onClick={() => setIsEditing(true)} width="full">
-                        Edit Profile
+                <HStack spacing={4} width="100%">
+                  {isEditing ? (
+                    <>
+                      <Button colorScheme="brand" onClick={handleSave} flex="1">
+                        Save Changes
                       </Button>
-                    )}
-                  </HStack>
-                </VStack>
+                      <Button variant="outline" onClick={() => setIsEditing(false)} flex="1">
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button colorScheme="brand" onClick={() => setIsEditing(true)} width="full">
+                      Edit Profile
+                    </Button>
+                  )}
+                </HStack>
 
                 <Divider />
 
-                <VStack spacing={2} align="flex-start" width="100%" maxW="md">
-                  <Text><strong>Account Status:</strong> {user.is_active ? 'Active' : 'Inactive'}</Text>
-                  <Text><strong>Email Verified:</strong> {user.is_verified ? 'Yes' : 'No'}</Text>
-                  {/* created_at is not in client User type; hide if undefined */}
-                  { (user as any).created_at && (
-                    <Text><strong>Member Since:</strong> {new Date((user as any).created_at).toLocaleDateString()}</Text>
-                  )}
+                <VStack spacing={4} align="flex-start" width="100%" maxW="md">
+                  <VStack spacing={2} align="flex-start" width="100%">
+                    <HStack justify="space-between" width="100%">
+                      <Text fontWeight="semibold">Experience Progress</Text>
+                      <Text fontSize="sm" color="gray.600">
+                        {user.exp} / {user.level * 100} XP
+                      </Text>
+                    </HStack>
+                    <Progress
+                      value={animatedProgress}
+                      size="lg"
+                      colorScheme="brand"
+                      borderRadius="full"
+                      hasStripe
+                      isAnimated
+                      transition="width 0.6s ease"
+                      width="100%"
+                      sx={{
+                        '& > div:first-of-type': {
+                          transition: 'width 0.6s ease'
+                        }
+                      }}
+                    />
+                    <Text fontSize="xs" color="gray.500">
+                      Level {user.level} • Next level: {user.level * 100 - user.exp} XP
+                    </Text>
+                  </VStack>
+                  
+                  <Divider />
+                  
+                  <VStack spacing={2} align="flex-start" width="100%">
+                    <Text><strong>Account Status:</strong> {user.is_active ? 'Active' : 'Inactive'}</Text>
+                    <Text><strong>Email Verified:</strong> {user.is_verified ? 'Yes' : 'No'}</Text>
+                    {/* created_at is not in client User type; hide if undefined */}
+                    { (user as any).created_at && (
+                      <Text><strong>Member Since:</strong> {new Date((user as any).created_at).toLocaleDateString()}</Text>
+                    )}
+                  </VStack>
                 </VStack>
               </VStack>
             </CardBody>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import {
   Box,
   Button,
@@ -13,10 +13,13 @@ import {
   List,
   ListItem,
   IconButton,
+  useColorModeValue,
 } from '@chakra-ui/react'
 import { AttachmentIcon, CloseIcon } from '@chakra-ui/icons'
 import { FaFile, FaFolder } from 'react-icons/fa'
+import { motion, AnimatePresence } from 'framer-motion'
 import { apiClient } from '@/services/apiClient'
+import { fadeIn, staggerContainer, staggerItem } from '@/utils/animations'
 
 interface FileUploadProps {
   onUploadComplete?: () => void
@@ -26,10 +29,21 @@ interface FileUploadProps {
 export default function FileUpload({ onUploadComplete, currentFolder = '' }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const folderInputRef = useRef<HTMLInputElement>(null)
+  const dropZoneRef = useRef<HTMLDivElement>(null)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
   const toast = useToast()
+  
+  const dropZoneBg = useColorModeValue(
+    isDragging ? 'brand.50' : 'transparent',
+    isDragging ? 'whiteAlpha.100' : 'transparent'
+  )
+  const dropZoneBorderColor = useColorModeValue(
+    isDragging ? 'brand.500' : 'gray.300',
+    isDragging ? 'brand.400' : 'gray.600'
+  )
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
@@ -167,6 +181,33 @@ export default function FileUpload({ onUploadComplete, currentFolder = '' }: Fil
     return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`
   }
 
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!isDragging) setIsDragging(true)
+  }, [isDragging])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const files = Array.from(e.dataTransfer.files || [])
+    const filtered = files.filter((f) => {
+      const name = f.name || ''
+      if (name.startsWith('.')) return false
+      if (name === '.DS_Store' || name === '.gitignore' || name === '.git') return false
+      return true
+    })
+    setSelectedFiles((prev) => [...prev, ...filtered])
+  }, [])
+
   // Normalize currentFolder for display
   const displayFolder = currentFolder && currentFolder.trim() 
     ? '/' + currentFolder.trim().replace(/^\/+|\/+$/g, '') 
@@ -230,34 +271,74 @@ export default function FileUpload({ onUploadComplete, currentFolder = '' }: Fil
         </Button>
       </HStack>
 
+      <Box
+        ref={dropZoneRef}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        border="2px dashed"
+        borderColor={dropZoneBorderColor}
+        borderRadius="xl"
+        p={8}
+        bg={dropZoneBg}
+        transition="all 0.3s ease"
+        transform={isDragging ? 'scale(1.02)' : 'scale(1)'}
+        textAlign="center"
+        mb={selectedFiles.length > 0 ? 4 : 0}
+        display={selectedFiles.length > 0 ? 'none' : 'block'}
+      >
+        <VStack spacing={2}>
+          <Icon as={AttachmentIcon} boxSize={8} color={dropZoneBorderColor} />
+          <Text fontSize="sm" color="gray.600">
+            Drag and drop files here, or click buttons above
+          </Text>
+        </VStack>
+      </Box>
+
       {selectedFiles.length > 0 && (
-        <Box>
+        <Box
+          as={motion.div}
+          variants={fadeIn}
+          initial="initial"
+          animate="animate"
+        >
           <Text fontSize="sm" fontWeight="bold" mb={2}>
             Selected Files ({selectedFiles.length})
           </Text>
           <List spacing={1} maxH="200px" overflowY="auto" p={2} bg="gray.50" borderRadius="md">
-            {selectedFiles.map((file, index) => (
-              <ListItem key={index}>
-                <HStack justify="space-between" fontSize="xs">
-                  <HStack flex={1} overflow="hidden">
-                    <Icon as={FaFile} color="blue.500" />
-                    <Text noOfLines={1}>{file.name}</Text>
-                  </HStack>
-                  <HStack spacing={2}>
-                    <Text color="gray.500">{formatFileSize(file.size)}</Text>
-                    <IconButton
-                      aria-label="Remove file"
-                      icon={<CloseIcon />}
-                      size="xs"
-                      variant="ghost"
-              colorScheme="red"
-                      onClick={() => removeFile(index)}
-                      isDisabled={isUploading}
-                    />
-                  </HStack>
-                </HStack>
-              </ListItem>
-            ))}
+            <AnimatePresence mode="popLayout">
+              {selectedFiles.map((file, index) => (
+                <motion.div
+                  key={`${file.name}-${index}`}
+                  variants={staggerItem}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  layout
+                >
+                  <ListItem>
+                    <HStack justify="space-between" fontSize="xs">
+                      <HStack flex={1} overflow="hidden">
+                        <Icon as={FaFile} color="blue.500" />
+                        <Text noOfLines={1}>{file.name}</Text>
+                      </HStack>
+                      <HStack spacing={2}>
+                        <Text color="gray.500">{formatFileSize(file.size)}</Text>
+                        <IconButton
+                          aria-label="Remove file"
+                          icon={<CloseIcon />}
+                          size="xs"
+                          variant="ghost"
+                          colorScheme="red"
+                          onClick={() => removeFile(index)}
+                          isDisabled={isUploading}
+                        />
+                      </HStack>
+                    </HStack>
+                  </ListItem>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </List>
 
           <HStack mt={2}>
@@ -283,7 +364,20 @@ export default function FileUpload({ onUploadComplete, currentFolder = '' }: Fil
 
           {isUploading && (
             <Box mt={2}>
-              <Progress value={uploadProgress} size="sm" colorScheme="brand" borderRadius="md" />
+              <Progress 
+                value={uploadProgress} 
+                size="sm" 
+                colorScheme="brand" 
+                borderRadius="full"
+                hasStripe
+                isAnimated
+                transition="width 0.3s ease"
+                sx={{
+                  '& > div:first-of-type': {
+                    transition: 'width 0.3s ease'
+                  }
+                }}
+              />
               <Text fontSize="xs" color="gray.500" textAlign="center" mt={1}>
                 {uploadProgress}%
               </Text>

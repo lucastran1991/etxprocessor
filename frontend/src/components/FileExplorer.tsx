@@ -25,7 +25,9 @@ import {
   DeleteIcon,
 } from '@chakra-ui/icons'
 import { FaFolder, FaFolderOpen, FaFile } from 'react-icons/fa'
+import { motion, AnimatePresence } from 'framer-motion'
 import { apiClient } from '@/services/apiClient'
+import { fadeIn, slideIn } from '@/utils/animations'
 
 interface FileNode {
   id: string
@@ -123,22 +125,31 @@ function FileTreeItem({
       data-file-item
       onClick={(e: React.MouseEvent) => e.stopPropagation()}
     >
-      <HStack
-        spacing={1}
-        py={1.5}
-        px={2}
-        pl={level * 4 + 2}
-        _hover={{ bg: rowHoverBg, cursor: 'pointer' }}
-        bg={isSelected ? selectedBg : undefined}
-        borderWidth={isSelected ? '1px' : undefined}
-        borderColor={isSelected ? selectedBorder : undefined}
-        borderRadius="md"
-        transition="all 0.2s"
-        onClick={(e: React.MouseEvent) => {
-          e.stopPropagation()
-          handleClick()
-        }}
+      <motion.div
+        whileHover={{ scale: 1.01 }}
+        transition={{ duration: 0.2 }}
       >
+        <HStack
+          spacing={1}
+          py={1.5}
+          px={2}
+          pl={level * 4 + 2}
+          _hover={{ 
+            bg: rowHoverBg, 
+            cursor: 'pointer',
+            transform: 'translateX(4px)',
+            boxShadow: 'sm',
+          }}
+          bg={isSelected ? selectedBg : undefined}
+          borderWidth={isSelected ? '1px' : undefined}
+          borderColor={isSelected ? selectedBorder : undefined}
+          borderRadius="md"
+          transition="all 0.3s ease"
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation()
+            handleClick()
+          }}
+        >
         {/* Chevron for folders */}
         {isFolder ? (
           <Box
@@ -149,15 +160,23 @@ function FileTreeItem({
             }}
             p={1}
             borderRadius="sm"
-            _hover={{ bg: chevronHoverBg }}
-            transition="transform 0.2s"
-            transform={isOpen ? 'rotate(0deg)' : 'rotate(0deg)'}
+            _hover={{ bg: chevronHoverBg, transform: 'scale(1.1)' }}
+            transition="all 0.2s ease"
+            position="relative"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
           >
-            <Icon
-              as={isOpen ? ChevronDownIcon : ChevronUpIcon}
-              boxSize={4}
-              color={chevronColor}
-            />
+            <motion.div
+              animate={{ rotate: isOpen ? 180 : 0 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+            >
+              <Icon
+                as={ChevronDownIcon}
+                boxSize={4}
+                color={chevronColor}
+              />
+            </motion.div>
           </Box>
         ) : (
           <Box w="24px" />
@@ -233,7 +252,8 @@ function FileTreeItem({
             </MenuList>
           </Menu>
         )}
-      </HStack>
+        </HStack>
+      </motion.div>
 
       {/* Folder Children */}
       {isFolder && hasChildren && (
@@ -422,10 +442,30 @@ export default function FileExplorer({ onFileSelect, onFolderSelect, onRefresh, 
 
   if (fileTree.length === 0) {
     return (
-      <Box p={4} textAlign="center">
-        <Text color="gray.500" fontSize="sm">
-          No files uploaded yet
-        </Text>
+      <Box
+        as={motion.div}
+        variants={fadeIn}
+        initial="initial"
+        animate="animate"
+        p={8}
+        textAlign="center"
+      >
+        <VStack spacing={4}>
+          <Icon
+            as={FaFolder}
+            boxSize={12}
+            color="gray.400"
+            opacity={0.5}
+          />
+          <VStack spacing={2}>
+            <Text color="gray.500" fontSize="md" fontWeight="semibold">
+              No files uploaded yet
+            </Text>
+            <Text color="gray.400" fontSize="sm">
+              Start by uploading your first file or folder
+            </Text>
+          </VStack>
+        </VStack>
       </Box>
     )
   }

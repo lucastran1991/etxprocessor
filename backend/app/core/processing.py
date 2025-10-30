@@ -437,6 +437,7 @@ class ProcessingService:
         nrows: int = 100000,
         db: Session = None,
         user: User = None,
+        delOnComplete: bool = False,
         mid: Optional[str] = str(uuid.uuid4()),
     ) -> str:
 
@@ -529,6 +530,7 @@ class ProcessingService:
         data_file: Optional[str] = None,
         db: Session = None,
         user: User = None,
+        delOnComplete: bool = False,
         mid: Optional[str] = str(uuid.uuid4()),
     ) -> str:
 
@@ -606,6 +608,7 @@ class ProcessingService:
         tenant_name: Optional[str] = None,
         db: Session = None,
         user: User = None,
+        delOnComplete: bool = False,
         mid: Optional[str] = str(uuid.uuid4()),
     ) -> str:
 
