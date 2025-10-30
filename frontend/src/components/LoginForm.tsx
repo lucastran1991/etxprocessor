@@ -53,7 +53,7 @@ export default function LoginForm({ showRegisterLink = true }: LoginFormProps) {
   }
 
   return (
-    <Box w="full" maxW="md">
+    <Box w="full">
       <form onSubmit={handleSubmit(onSubmit)}>
         <VStack spacing={4}>
           <AnimatePresence>
